@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Калькулятор першого замовлення — буфер під запуск SKU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e0f12; --panel:#16181d; --panel-2:#1c1f26; --line:#2a2e38;
+    --ink:#eef0f4; --muted:#8b909c; --faint:#5a5f6b;
+    --amber:#f5a524; --amber-dim:#9c6a17;
+    --green:#34d27b; --yellow:#f5d524; --red:#ff5d5d; --blue:#54a7ff;
+    --r:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased}
+  body{
+    background-image:radial-gradient(circle at 12% 0%,rgba(245,165,36,.07),transparent 40%),
+                     radial-gradient(circle at 90% 100%,rgba(84,167,255,.05),transparent 45%);
+    min-height:100vh;padding:28px 20px 60px;
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
+        border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:24px}
+  .title{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(22px,3.2vw,34px);
+         letter-spacing:-.02em;line-height:1}
+  .title b{color:var(--amber)}
+  .sub{color:var(--muted);font-size:13px;margin-top:8px;max-width:560px;line-height:1.5}
+  .badge{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--amber);
+         border:1px solid var(--amber-dim);border-radius:100px;padding:6px 12px;white-space:nowrap}
+
+  .grid{display:grid;grid-template-columns:380px 1fr;gap:22px;align-items:start}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+  .card h2{font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;letter-spacing:.08em;
+           text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .card h2::before{content:"";width:7px;height:7px;background:var(--amber);border-radius:2px;transform:rotate(45deg)}
+
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500}
+  .field .hint{color:var(--faint);font-size:11px;font-weight:400}
+  .inp{display:flex;align-items:center;background:var(--panel-2);border:1px solid var(--line);
+       border-radius:9px;overflow:hidden;transition:border-color .15s}
+  .inp:focus-within{border-color:var(--amber)}
+  .inp input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);
+             font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:500;padding:10px 12px;width:100%}
+  .inp .unit{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);padding:0 12px;white-space:nowrap}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+  .seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px}
+  .seg button{flex:1;background:transparent;border:0;color:var(--muted);font-family:'IBM Plex Sans';
+              font-size:12px;font-weight:600;padding:9px 6px;border-radius:6px;cursor:pointer;transition:.15s}
+  .seg button.on{background:var(--amber);color:#1a1205}
+  .seg.modes button.on{background:var(--blue);color:#04122a}
+
+  .divider{height:1px;background:var(--line);margin:18px 0}
+  .small{font-size:11px;color:var(--faint);line-height:1.5;margin-top:4px}
+
+  /* results */
+  .res-top{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  @media(max-width:680px){.res-top{grid-template-columns:1fr 1fr}}
+  .stat{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:14px 15px;position:relative;overflow:hidden}
+  .stat .k{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:8px;line-height:1.3}
+  .stat .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:25px;line-height:1;letter-spacing:-.01em}
+  .stat .v small{font-size:12px;color:var(--faint);font-weight:500}
+  .stat.hero{background:linear-gradient(135deg,rgba(245,165,36,.16),rgba(245,165,36,.02));border-color:var(--amber-dim)}
+  .stat.hero .v{color:var(--amber)}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+  @media(max-width:680px){.split{grid-template-columns:1fr}}
+  .leg{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:14px}
+  .leg .lh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .leg .lh .name{font-family:'Archivo';font-weight:800;font-size:13px;letter-spacing:.03em}
+  .leg .tag{font-family:'JetBrains Mono';font-size:10px;padding:3px 8px;border-radius:6px}
+  .tag.air{background:rgba(84,167,255,.15);color:var(--blue)}
+  .tag.bulk{background:rgba(52,210,123,.13);color:var(--green)}
+  .leg .qty{font-family:'JetBrains Mono';font-weight:700;font-size:28px;line-height:1}
+  .leg .meta{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6}
+  .leg .meta b{color:var(--ink);font-family:'JetBrains Mono';font-weight:500}
+
+  .chart-card{margin-top:0}
+  canvas{width:100%;height:230px;display:block}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--muted)}
+  .legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+
+  .alert{border-radius:11px;padding:13px 15px;font-size:13px;line-height:1.5;margin-bottom:10px;
+         display:flex;gap:10px;align-items:flex-start;border:1px solid}
+  .alert .ic{font-family:'JetBrains Mono';font-weight:700;flex-shrink:0}
+  .alert.ok{background:rgba(52,210,123,.08);border-color:rgba(52,210,123,.3)}
+  .alert.ok .ic{color:var(--green)}
+  .alert.warn{background:rgba(245,213,36,.07);border-color:rgba(245,213,36,.3)}
+  .alert.warn .ic{color:var(--yellow)}
+  .alert.bad{background:rgba(255,93,93,.08);border-color:rgba(255,93,93,.35)}
+  .alert.bad .ic{color:var(--red)}
+  .alert b{color:var(--ink)}
+
+  .modecmp{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+  .modecmp th,.modecmp td{text-align:right;padding:9px 10px;border-bottom:1px solid var(--line)}
+  .modecmp th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+  .modecmp td:first-child,.modecmp th:first-child{text-align:left}
+  .modecmp td{font-family:'JetBrains Mono';font-weight:500}
+  .modecmp tr.cur td{background:rgba(245,165,36,.06)}
+  .pill{font-family:'IBM Plex Sans';font-weight:600;font-size:11px;padding:2px 8px;border-radius:20px}
+  .pill.lo{background:rgba(52,210,123,.15);color:var(--green)}
+  .pill.mid{background:rgba(245,213,36,.15);color:var(--yellow)}
+  .pill.hi{background:rgba(255,93,93,.15);color:var(--red)}
+
+  .anim{opacity:0;transform:translateY(8px);animation:rise .5s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .help{background:linear-gradient(135deg,rgba(245,165,36,.08),rgba(245,165,36,.01));border:1px solid var(--amber-dim);border-radius:var(--r);margin-bottom:22px;overflow:hidden}
+  .help summary{list-style:none;cursor:pointer;padding:15px 20px;font-family:'Archivo',sans-serif;font-weight:800;font-size:14px;letter-spacing:.02em;display:flex;align-items:center;gap:10px;color:var(--amber)}
+  .help summary::-webkit-details-marker{display:none}
+  .help summary .chev{margin-left:auto;transition:transform .2s;color:var(--muted);font-size:12px}
+  .help[open] summary .chev{transform:rotate(180deg)}
+  .help .body{padding:0 20px 18px;font-size:13px;line-height:1.6}
+  .help .body p{margin-bottom:8px;color:var(--ink)}
+  .help .body b{color:var(--amber)}
+  .help .body ul{margin:0 0 12px 18px}
+  .help .body li{margin-bottom:5px;color:var(--muted)}
+  .help .body li b{color:var(--ink)}
+  .help .rule{background:rgba(255,93,93,.08);border:1px solid rgba(255,93,93,.3);border-radius:9px;padding:10px 13px;margin-top:4px;color:var(--ink);font-size:12.5px}
+  .foot{color:var(--faint);font-size:11px;line-height:1.6;margin-top:22px;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head anim">
+    <div>
+      <div class="title">Перша партія <b>/ буфер</b> під запуск SKU</div>
+      <div class="sub">Скільки везти на старті, щоб успішний запуск не випав в аут-оф-сток. Рахує під рамп нової картки, тип доставки (Авіа / ЖД / Море) і гібридну розбивку — та одразу показує, де авіа з'їдає РРЦ.</div>
+    </div>
+    <div class="badge">v1 · ROZETKA LAUNCH</div>
+  </div>
+
+  <details class="help anim" style="animation-delay:.07s">
+    <summary>❓ Як користуватись <span class="chev">▾</span></summary>
+    <div class="body">
+      <p>Рахує, скільки везти на старті, щоб успішний запуск не випав в аут-оф-сток — і не довелося розкручувати картку з нуля.</p>
+      <p><b>Що ввести:</b></p>
+      <ul>
+        <li><b>Продажі конкурента</b> на цільовій позиції видачі — шт/місяць.</li>
+        <li><b>Множник</b> — наскільки ми сильніші за конкурента (1 = нарівні).</li>
+        <li><b>Рамп</b> — за скільки днів нова картка виходить на повну швидкість.</li>
+        <li><b>РРЦ</b>, а також <b>термін і вартість доставки</b> по кожному типу (Авіа / ЖД / Море) — усе редагується.</li>
+      </ul>
+      <p><b>Як читати результат:</b></p>
+      <ul>
+        <li><b>Перша партія</b> — скільки замовити зараз. У гібриді: Міст (швидка партія) + Основна (дешева повільна).</li>
+        <li><b>Точка реордеру</b> — при якому залишку замовляти наступну партію.</li>
+        <li><b>Прапор по авіа</b> — якщо доставка з'їдає забагато від РРЦ, калькулятор підкаже взяти ЖД як міст.</li>
+        <li><b>Графік</b> — чи план не провалюється в нуль; якщо провалюється, підсвічує день OOS.</li>
+      </ul>
+      <div class="rule">⚠️ <b>Залізне правило:</b> щойно залишок впав до точки реордеру — замовляй наступну партію одразу, не «потім».</div>
+    </div>
+  </details>
+
+  <div class="grid">
+    <!-- INPUTS -->
+    <div class="card anim" style="animation-delay:.05s">
+      <h2>Дані запуску</h2>
+
+      <div class="field">
+        <label>Продажі конкурента на цільовій позиції <span class="hint">шт/місяць на тій позиції, на яку цілишся</span></label>
+        <div class="inp"><input id="vcomp" type="number" value="100" min="0" step="10"><span class="unit">шт/міс</span></div>
+        <div class="small" id="vday"></div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Наш множник <span class="hint">vs конкурент</span></label>
+          <div class="inp"><input id="mult" type="number" value="1" min="0.1" step="0.1"><span class="unit">×</span></div>
+        </div>
+        <div class="field">
+          <label>Рамп до швидкості</label>
+          <div class="inp"><input id="ramp" type="number" value="30" min="1" step="1"><span class="unit">днів</span></div>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Страховий запас</label>
+          <div class="inp"><input id="safety" type="number" value="20" min="0" step="5"><span class="unit">%</span></div>
+        </div>
+        <div class="field">
+          <label>РРЦ</label>
+          <div class="inp"><input id="price" type="number" value="600" min="1" step="50"><span class="unit">грн</span></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <h2 style="margin-bottom:12px">Доставка</h2>
+
+      <div style="font-size:11px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Термін доставки <span style="color:var(--muted);text-transform:none;font-weight:500">— редагується, днів</span></div>
+      <div class="row3">
+        <div class="field">
+          <label>Авіа</label>
+          <div class="inp"><input id="dair" type="number" value="30" min="1"><span class="unit">дн</span></div>
+        </div>
+        <div class="field">
+          <label>ЖД</label>
+          <div class="inp"><input id="drail" type="number" value="70" min="1"><span class="unit">дн</span></div>
+        </div>
+        <div class="field">
+          <label>Море</label>
+          <div class="inp"><input id="dsea" type="number" value="100" min="1"><span class="unit">дн</span></div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin:6px 0 8px">Вартість доставки <span style="color:var(--muted);text-transform:none;font-weight:500">— за одиницю, грн</span></div>
+      <div class="row3">
+        <div class="field">
+          <label>Авіа ціна/од</label>
+          <div class="inp"><input id="cair" type="number" value="220" min="0"><span class="unit">грн</span></div>
+        </div>
+        <div class="field">
+          <label>ЖД ціна/од</label>
+          <div class="inp"><input id="crail" type="number" value="70" min="0"><span class="unit">грн</span></div>
+        </div>
+        <div class="field">
+          <label>Море ціна/од</label>
+          <div class="inp"><input id="csea" type="number" value="45" min="0"><span class="unit">грн</span></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field">
+        <label>Стратегія</label>
+        <div class="seg" id="strat">
+          <button data-v="hybrid" class="on">Гібрид (міст + основна)</button>
+          <button data-v="single">Один тип</button>
+        </div>
+      </div>
+
+      <div class="field" id="hybridBox">
+        <label>Гібрид: швидкий міст → основна партія</label>
+        <div class="row2">
+          <div class="seg modes" id="fastMode">
+            <button data-v="air" class="on">Авіа міст</button>
+            <button data-v="rail">ЖД міст</button>
+          </div>
+          <div class="seg modes" id="bulkMode">
+            <button data-v="sea" class="on">Море</button>
+            <button data-v="rail">ЖД</button>
+          </div>
+        </div>
+        <div class="small">Міст перекриває «діру» поки пливе основна дешева партія.</div>
+      </div>
+
+      <div class="field" id="singleBox" style="display:none">
+        <label>Тип доставки</label>
+        <div class="seg modes" id="singleModeSel">
+          <button data-v="air">Авіа</button>
+          <button data-v="rail">ЖД</button>
+          <button data-v="sea" class="on">Море</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Основну партію веземо на <span class="hint">днів продажів</span></label>
+        <div class="inp"><input id="bulkcov" type="number" value="120" min="10" step="10"><span class="unit">днів</span></div>
+      </div>
+
+      <div class="field">
+        <label>Поріг «авіа дорога» <span class="hint">% доставки від РРЦ</span></label>
+        <div class="inp"><input id="thr" type="number" value="20" min="1" step="1"><span class="unit">%</span></div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div>
+      <div class="card anim" style="animation-delay:.1s;margin-bottom:22px">
+        <h2>Що замовляти</h2>
+        <div id="alerts"></div>
+        <div class="res-top" id="stats"></div>
+        <div class="split" id="legs"></div>
+        <div id="reorder" class="small" style="font-size:12.5px;color:var(--muted);line-height:1.6"></div>
+      </div>
+
+      <div class="card chart-card anim" style="animation-delay:.15s;margin-bottom:22px">
+        <h2>Прогноз залишку на складі</h2>
+        <canvas id="chart"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--amber)"></i>Залишок на складі</span>
+          <span><i style="background:var(--red)"></i>Точка реордеру</span>
+          <span><i style="background:var(--blue)"></i>Прихід партії</span>
+          <span><i style="background:var(--faint)"></i>Нуль (аут-оф-сток)</span>
+        </div>
+      </div>
+
+      <div class="card anim" style="animation-delay:.2s">
+        <h2>Порівняння типів доставки</h2>
+        <table class="modecmp" id="cmp"></table>
+        <div class="small" style="margin-top:10px">Ризик OOS = чи витягує цей тип повільність поповнення на твоїй швидкості. Чим довший лід-тайм як єдиний — тим вищий ризик випасти під час рампу.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    Це планувальний орієнтир, не точний прогноз. Швидкість конкурента — оцінка (приріст відгуків × частка тих, хто лишає відгук, або дані аналітики). Найбільший важіль точності — реалістична цільова позиція й чесний множник. Реордер роби дисципліновано: коли залишок падає до точки реордеру, замовляй одразу.
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const num=id=>parseFloat($(id).value)||0;
+const fmt=n=>Math.round(n).toLocaleString('uk-UA').replace(/,/g,' ');
+const money=n=>fmt(n)+' грн';
+
+let strat='hybrid', fast='air', bulk='sea', single='sea';
+
+function leadOf(m){return m==='air'?num('dair'):m==='rail'?num('drail'):num('dsea');}
+function costOf(m){return m==='air'?num('cair'):m==='rail'?num('crail'):num('csea');}
+function nameOf(m){return m==='air'?'Авіа':m==='rail'?'ЖД':'Море';}
+
+function compute(){
+  const vUs=num('vcomp')*num('mult')/30;      // наша повна швидкість, шт/день (конкурент заданий шт/міс)
+  const ramp=Math.max(1,num('ramp'));
+  const sm=1+num('safety')/100;
+  const price=num('price');
+  const thr=num('thr');
+  const bulkCov=num('bulkcov');
+  $('vday').innerHTML = vUs>0 ? `≈ <b style="color:var(--ink)">${vUs.toFixed(1)} шт/день</b> наша повна швидкість (місяць = 30 дн)` : '';
+
+  // кумулятивний попит до дня t (лінійний рамп → плато)
+  const cum=t=>{ if(t<=0)return 0; return t<=ramp ? 0.5*vUs*t*t/ramp : 0.5*vUs*ramp + vUs*(t-ramp); };
+  const daily=t=> t<=0?0 : t<ramp ? vUs*t/ramp : vUs;
+
+  let plan={};
+  if(strat==='hybrid'){
+    const Lf=leadOf(fast), Lb=leadOf(bulk), cf=costOf(fast), cb=costOf(bulk);
+    const bridge=Lb-Lf;
+    plan.valid = bridge>0;
+    plan.bridge=bridge;
+    plan.airQty=Math.ceil(cum(bridge)*sm);
+    plan.bulkQty=Math.ceil((cum(bridge+bulkCov)-cum(bridge))*sm);
+    plan.total=plan.airQty+plan.bulkQty;
+    plan.airCost=plan.airQty*cf; plan.bulkCost=plan.bulkQty*cb;
+    plan.totalCost=plan.airCost+plan.bulkCost;
+    plan.blended=plan.total?plan.totalCost/plan.total:0;
+    plan.premium=plan.airQty*(cf-cb);
+    plan.rop=Math.ceil(vUs*Lb*sm);
+    plan.fastL=Lf;plan.bulkL=Lb;plan.cf=cf;plan.cb=cb;
+  }else{
+    const L=leadOf(single), c=costOf(single);
+    const cov=ramp+L;                          // рекомендоване покриття Q1
+    plan.q1=Math.ceil(cum(cov)*sm);
+    plan.cov=cov; plan.L=L; plan.c=c;
+    plan.totalCost=plan.q1*c; plan.total=plan.q1;
+    plan.blended=c;
+    plan.rop=Math.ceil(vUs*L*sm);
+  }
+
+  // --- STATS ---
+  const stats=$('stats');
+  if(strat==='hybrid'){
+    stats.innerHTML=`
+      <div class="stat hero"><div class="k">Перша партія (всього)</div><div class="v">${fmt(plan.total)} <small>шт</small></div></div>
+      <div class="stat"><div class="k">Заморожено в доставці</div><div class="v" style="font-size:20px">${fmt(plan.totalCost)} <small>грн</small></div></div>
+      <div class="stat"><div class="k">Сер. доставка / од</div><div class="v" style="font-size:20px">${fmt(plan.blended)} <small>грн</small></div></div>
+      <div class="stat"><div class="k">Доставка від РРЦ</div><div class="v" style="font-size:22px">${price?Math.round(plan.blended/price*100):0}<small>%</small></div></div>`;
+  }else{
+    stats.innerHTML=`
+      <div class="stat hero"><div class="k">Перша партія (${nameOf(single)})</div><div class="v">${fmt(plan.q1)} <small>шт</small></div></div>
+      <div class="stat"><div class="k">Покриває</div><div class="v">${fmt(plan.cov)} <small>днів</small></div></div>
+      <div class="stat"><div class="k">Заморожено в доставці</div><div class="v" style="font-size:20px">${fmt(plan.totalCost)} <small>грн</small></div></div>
+      <div class="stat"><div class="k">Доставка від РРЦ</div><div class="v" style="font-size:22px">${price?Math.round(plan.c/price*100):0}<small>%</small></div></div>`;
+  }
+
+  // --- LEGS ---
+  const legs=$('legs');
+  if(strat==='hybrid'){
+    legs.style.display='grid';
+    legs.innerHTML=`
+      <div class="leg"><div class="lh"><span class="name">МІСТ · ${nameOf(fast)}</span><span class="tag air">${plan.fastL} дн</span></div>
+        <div class="qty" style="color:var(--blue)">${fmt(plan.airQty)} <small style="font-size:13px;color:var(--faint)">шт</small></div>
+        <div class="meta">Перекриває <b>${fmt(plan.bridge)} дн</b> поки пливе основна.<br>Вартість: <b>${money(plan.airCost)}</b> · <b>${plan.cf} грн/од</b></div></div>
+      <div class="leg"><div class="lh"><span class="name">ОСНОВНА · ${nameOf(bulk)}</span><span class="tag bulk">${plan.bulkL} дн</span></div>
+        <div class="qty" style="color:var(--green)">${fmt(plan.bulkQty)} <small style="font-size:13px;color:var(--faint)">шт</small></div>
+        <div class="meta">Запас на <b>${fmt(bulkCov)} дн</b> після приходу.<br>Вартість: <b>${money(plan.bulkCost)}</b> · <b>${plan.cb} грн/од</b></div></div>`;
+  }else{legs.style.display='none';legs.innerHTML='';}
+
+  // --- REORDER LINE ---
+  // день реордеру: коли продано (total - rop)
+  let roDay=0,acc=0;
+  const target=(strat==='hybrid'?plan.total:plan.q1)-plan.rop;
+  for(let t=1;t<800;t++){ if(cum(t)>=target){roDay=t;break;} }
+  const Lb = strat==='hybrid'?plan.bulkL:plan.L;
+  $('reorder').innerHTML=`<b style="color:var(--amber)">Точка реордеру:</b> коли залишок впаде до <b style="color:var(--ink)">${fmt(plan.rop)} шт</b> (≈ день <b style="color:var(--ink)">${roDay}</b> від старту) — замовляй наступну партію <b>${nameOf(bulk||single)}</b>. З лід-тайму ${Lb} дн вона прийде саме коли стара добігає кінця.`;
+
+  // --- ALERTS ---
+  const al=$('alerts'); al.innerHTML='';
+  const airShare = price? costOf(strat==='hybrid'?fast:single)/price*100 :0;
+  const usingAir = (strat==='hybrid'&&fast==='air')||(strat==='single'&&single==='air');
+
+  if(strat==='hybrid'&&!plan.valid){
+    al.innerHTML+=`<div class="alert bad"><span class="ic">✕</span><div><b>Міст не швидший за основну.</b> Обери швидший тип для мосту (Авіа), ніж для основної партії, або стратегію «Один тип».</div></div>`;
+  }
+  if(usingAir && airShare>thr){
+    al.innerHTML+=`<div class="alert bad"><span class="ic">!</span><div><b>Авіа з'їдає ${Math.round(airShare)}% РРЦ</b> (поріг ${thr}%). При РРЦ ${fmt(price)} грн авіа невигідна. Спробуй <b>ЖД як міст</b> — діра коротша й дешевша — або менший авіа-обсяг.</div></div>`;
+  } else if(usingAir && airShare>thr*0.7){
+    al.innerHTML+=`<div class="alert warn"><span class="ic">~</span><div>Авіа = <b>${Math.round(airShare)}% РРЦ</b>, близько до порогу. Тримай авіа-міст мінімальним або глянь ЖД.</div></div>`;
+  }
+  if(strat==='hybrid'&&plan.valid&&plan.premium>0){
+    al.innerHTML+=`<div class="alert ${plan.premium/Math.max(1,plan.totalCost)>0.35?'warn':'ok'}"><span class="ic">i</span><div><b>Ціна страховки від OOS = ${money(plan.premium)}</b> — стільки переплачуєш за швидкий міст проти того, щоб усе везти ${nameOf(bulk)}. Це і є вартість того, щоб не випасти під час рампу.</div></div>`;
+  }
+  if(strat==='single'){
+    const risk = single==='sea'?'високий':single==='rail'?'середній':'низький';
+    const cls = single==='sea'?'bad':single==='rail'?'warn':'ok';
+    const singleMsg = single!=='air'
+      ? `Поки пливе перше поповнення (${plan.L} дн), нема чим закрити сплеск. Розглянь гібрид: ${nameOf(single)} + швидкий міст.`
+      : `Швидкий лід-тайм — найнижчий ризик випасти, але найдорожча доставка.`;
+    al.innerHTML+=`<div class="alert ${cls}"><span class="ic">${single==='air'?'✓':'!'}</span><div>Один тип «${nameOf(single)}» — ризик OOS <b>${risk}</b>. ${singleMsg}</div></div>`;
+  }
+
+  // --- COMPARISON TABLE ---
+  const modes=['air','rail','sea'];
+  let rows=`<tr><th>Тип</th><th>Лід-тайм</th><th>Доставка/од</th><th>% РРЦ</th><th>Ризик OOS</th></tr>`;
+  modes.forEach(m=>{
+    const L=leadOf(m),c=costOf(m);
+    const sh=price?Math.round(c/price*100):0;
+    const risk=m==='air'?['lo','низький']:m==='rail'?['mid','середній']:['hi','високий'];
+    const cur=(strat==='single'&&single===m)||(strat==='hybrid'&&(fast===m||bulk===m));
+    rows+=`<tr class="${cur?'cur':''}"><td>${nameOf(m)}</td><td>${L} дн</td><td>${fmt(c)} грн</td><td>${sh}%</td><td style="text-align:right"><span class="pill ${risk[0]}">${risk[1]}</span></td></tr>`;
+  });
+  $('cmp').innerHTML=rows;
+
+  drawChart(plan,daily,cum);
+}
+
+// ---- CHART ----
+function drawChart(plan,daily,cum){
+  const cv=$('chart'); const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth,H=230; cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr); ctx.clearRect(0,0,W,H);
+  const pad={l:46,r:14,t:14,b:24};
+  const Lb = strat==='hybrid'?plan.bulkL:plan.L;
+  const bulkCov=num('bulkcov');
+  let horizon = strat==='hybrid' ? plan.bridge+bulkCov+Lb+20 : plan.cov+Lb+20;
+  horizon=Math.min(Math.max(horizon,60),700);
+
+  // simulate stock
+  let stock = strat==='hybrid'?plan.airQty:plan.q1;
+  let events=[]; // {day, qty}
+  if(strat==='hybrid') events.push({day:plan.bridge,qty:plan.bulkQty,label:'Море/ЖД'});
+  let reordered=false;
+  const series=[]; let maxS=stock;
+  for(let t=0;t<=horizon;t++){
+    // arrivals
+    events.forEach(e=>{ if(e.day===t){stock+=e.qty;} });
+    // reorder trigger
+    if(!reordered && stock<=plan.rop){ reordered=true; const q=strat==='hybrid'?plan.bulkQty:plan.q1; events.push({day:t+Lb,qty:q,label:'реордер'}); }
+    series.push(Math.max(0,stock));
+    maxS=Math.max(maxS,stock);
+    stock-=daily(t);
+  }
+  const x=t=>pad.l+(W-pad.l-pad.r)*t/horizon;
+  const y=v=>pad.t+(H-pad.t-pad.b)*(1-v/(maxS*1.08));
+
+  // grid + zero
+  ctx.strokeStyle='#2a2e38';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.l,y(0));ctx.lineTo(W-pad.r,y(0));ctx.stroke();
+  ctx.fillStyle='#5a5f6b';ctx.font='10px JetBrains Mono';ctx.textAlign='right';
+  [0,Math.round(maxS/2),Math.round(maxS)].forEach(v=>{ctx.fillText(fmt(v),pad.l-6,y(v)+3);});
+  ctx.textAlign='center';
+  for(let d=0;d<=horizon;d+=Math.ceil(horizon/6/10)*10){ctx.fillText(d+'д',x(d),H-8);}
+
+  // ROP line
+  ctx.strokeStyle='rgba(255,93,93,.5)';ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(pad.l,y(plan.rop));ctx.lineTo(W-pad.r,y(plan.rop));ctx.stroke();ctx.setLineDash([]);
+
+  // arrivals markers
+  events.forEach(e=>{ if(e.day<=horizon){ctx.strokeStyle='rgba(84,167,255,.5)';ctx.beginPath();ctx.moveTo(x(e.day),pad.t);ctx.lineTo(x(e.day),y(0));ctx.stroke();
+    ctx.fillStyle='#54a7ff';ctx.beginPath();ctx.arc(x(e.day),y(0),3,0,7);ctx.fill();}});
+
+  // area + line
+  const grad=ctx.createLinearGradient(0,pad.t,0,y(0));
+  grad.addColorStop(0,'rgba(245,165,36,.35)');grad.addColorStop(1,'rgba(245,165,36,0)');
+  ctx.beginPath();ctx.moveTo(x(0),y(series[0]));
+  series.forEach((v,t)=>ctx.lineTo(x(t),y(v)));
+  ctx.lineTo(x(horizon),y(0));ctx.lineTo(x(0),y(0));ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.moveTo(x(0),y(series[0]));
+  series.forEach((v,t)=>ctx.lineTo(x(t),y(v)));
+  ctx.strokeStyle='#f5a524';ctx.lineWidth=2.2;ctx.stroke();
+
+  // OOS flag if series hits 0 before horizon-Lb
+  const oosDay=series.findIndex((v,i)=>v<=0 && i<horizon-2);
+  if(oosDay>0){ctx.fillStyle='#ff5d5d';ctx.font='700 11px IBM Plex Sans';ctx.textAlign='left';
+    ctx.fillText('⚠ OOS ~день '+oosDay,x(oosDay)+4,y(0)-8);}
+}
+
+// ---- WIRING ----
+function seg(id,cb){ $(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  $(id).querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');cb(b.dataset.v);compute();});}
+seg('strat',v=>{strat=v;$('hybridBox').style.display=v==='hybrid'?'block':'none';$('singleBox').style.display=v==='single'?'block':'none';});
+seg('fastMode',v=>fast=v);
+seg('bulkMode',v=>bulk=v);
+seg('singleModeSel',v=>single=v);
+document.querySelectorAll('input').forEach(i=>i.addEventListener('input',compute));
+window.addEventListener('resize',compute);
+compute();
+</script>
+</body>
+</html>
