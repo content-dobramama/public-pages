@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Калькулятор Go/No-Go — Рентабельність товару (Розетка)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2EFE6; --ink:#15241d; --ink-soft:#46544c;
+    --line:#d4cebb; --field:#fbfaf5;
+    --green:#1f6f4a; --green-bg:#e3f0e6;
+    --amber:#b07908; --amber-bg:#f6ecd2;
+    --red:#b23b2e; --red-bg:#f3ddd7;
+    --black:#1b1b1b; --black-bg:#e2ded3;
+    --accent:#1f6f4a;
+    --shadow:0 1px 0 #fff inset, 0 18px 40px -28px rgba(21,36,29,.55);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:'Manrope',system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      linear-gradient(0deg,rgba(31,111,74,.04),rgba(31,111,74,.04)),
+      repeating-linear-gradient(0deg,transparent 0 27px,rgba(21,36,29,.035) 27px 28px),
+      var(--paper);
+    -webkit-font-smoothing:antialiased;
+    padding:28px 18px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  header{margin-bottom:22px}
+  .kicker{font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+  h1{font-family:'Unbounded',sans-serif;font-weight:800;font-size:clamp(26px,5vw,40px);line-height:1.02;margin:0 0 8px;letter-spacing:-.01em}
+  .sub{color:var(--ink-soft);font-size:14px;max-width:54ch}
+  .sub code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--black-bg);padding:1px 6px;border-radius:4px}
+
+  .card{background:var(--field);border:1.5px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:20px;margin-top:18px}
+  .card h2{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:0 0 16px;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .card h2 .n{font:700 11px/1 'JetBrains Mono',monospace;color:#fff;background:var(--accent);width:20px;height:20px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .f{display:flex;flex-direction:column;gap:6px}
+  .f.full{grid-column:1/-1}
+  label{font-size:12.5px;font-weight:600;color:var(--ink-soft)}
+  label .hint{font-weight:500;color:#8a9389}
+  input{
+    font-family:'JetBrains Mono',monospace;font-weight:500;font-size:16px;color:var(--ink);
+    background:#fff;border:1.5px solid var(--line);border-radius:9px;padding:11px 12px;width:100%;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(31,111,74,.14)}
+  input::placeholder{color:#b7bdb4}
+  .inline{display:flex;gap:10px}
+  .inline .f{flex:1}
+
+  details.settings{margin-top:18px;border:1.5px dashed var(--line);border-radius:12px;background:transparent}
+  details.settings summary{cursor:pointer;padding:13px 16px;font-size:12.5px;font-weight:700;color:var(--ink-soft);letter-spacing:.02em;list-style:none}
+  details.settings summary::-webkit-details-marker{display:none}
+  details.settings summary::before{content:"▸ ";color:var(--accent)}
+  details.settings[open] summary::before{content:"▾ "}
+  details.settings .grid{padding:4px 16px 18px}
+  details.settings input{font-size:14px;padding:8px 10px}
+
+  /* verdict */
+  .verdict{margin-top:18px;border-radius:16px;padding:22px;border:1.5px solid var(--line);background:#fff;position:relative;overflow:hidden}
+  .verdict .row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:9px;font-family:'Unbounded',sans-serif;font-weight:600;font-size:15px;padding:9px 16px;border-radius:999px;letter-spacing:.01em}
+  .marg{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(40px,10vw,68px);line-height:.9;letter-spacing:-.02em}
+  .marg small{font-size:.4em;font-weight:500;color:var(--ink-soft);letter-spacing:0}
+  .decide{margin-top:18px;font-family:'Unbounded',sans-serif;font-weight:800;font-size:18px;display:flex;align-items:center;gap:10px}
+  .decide .dot{width:12px;height:12px;border-radius:50%}
+  .reco{font-family:'Manrope';font-weight:500;font-size:13.5px;color:var(--ink-soft);margin-top:6px}
+
+  .bd{margin-top:18px;border-top:1.5px dashed var(--line);padding-top:14px;display:grid;grid-template-columns:1fr auto;gap:6px 18px;font-size:13.5px}
+  .bd .k{color:var(--ink-soft)}
+  .bd .v{font-family:'JetBrains Mono',monospace;font-weight:500;text-align:right}
+  .bd .tot{font-weight:700;color:var(--ink)}
+  .bd .neg{color:var(--red)}
+
+  /* color states */
+  .is-green .chip{background:var(--green-bg);color:var(--green)} .is-green .marg{color:var(--green)} .is-green .dot{background:var(--green)} .is-green{box-shadow:0 0 0 2px var(--green) inset}
+  .is-amber .chip{background:var(--amber-bg);color:var(--amber)} .is-amber .marg{color:var(--amber)} .is-amber .dot{background:var(--amber)} .is-amber{box-shadow:0 0 0 2px var(--amber) inset}
+  .is-red .chip{background:var(--red-bg);color:var(--red)} .is-red .marg{color:var(--red)} .is-red .dot{background:var(--red)} .is-red{box-shadow:0 0 0 2px var(--red) inset}
+  .is-black .chip{background:var(--black-bg);color:var(--black)} .is-black .marg{color:var(--black)} .is-black .dot{background:var(--black)} .is-black{box-shadow:0 0 0 2px var(--black) inset}
+  .is-none .chip{background:#eee;color:#888} .is-none .marg{color:#bbb}
+
+  footer{margin-top:26px;font-size:12px;color:#8a9389;text-align:center;line-height:1.6}
+  footer code{font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Воронка 2.0 · ворота Go / No-Go</div>
+    <h1>Рентабельність товару</h1>
+    <p class="sub">Логіст вводить <strong>свіжі</strong> числа перед замовленням. Формула — як у <code>Калькулятор Розетка 2 версія → Рентабельність товару</code>. Поріг рішення: <strong>≥15%</strong> брати, <strong>&lt;15%</strong> — No-Go.</p>
+  </header>
+
+  <div class="card">
+    <h2><span class="n">1</span> Товар</h2>
+    <div class="grid">
+      <div class="f full">
+        <label>Назва товару <span class="hint">(необов'язково)</span></label>
+        <input id="name" type="text" placeholder="напр. Портативний блендер OnePro 380 мл"/>
+      </div>
+      <div class="f">
+        <label>Ціна / РРЦ, грн <span class="hint">= медіана топ-3</span></label>
+        <input id="price" type="number" inputmode="decimal" placeholder="749"/>
+      </div>
+      <div class="f">
+        <label>Royalty (комісія Розетки), %</label>
+        <input id="royalty" type="number" inputmode="decimal" placeholder="18"/>
+      </div>
+      <div class="f full">
+        <label>Собівартість + доставка, грн</label>
+        <input id="cost" type="number" inputmode="decimal" placeholder="280"/>
+      </div>
+      <div class="f full">
+        <label>↳ помічник: порахувати собівартість з $ <span class="hint">(заповнить грн вище)</span></label>
+        <div class="inline">
+          <div class="f"><input id="usd" type="number" inputmode="decimal" placeholder="ціна, $"/></div>
+          <div class="f"><input id="ship" type="number" inputmode="decimal" placeholder="доставка, $"/></div>
+          <div class="f"><input id="rate" type="number" inputmode="decimal" placeholder="курс ₴/$"/></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span> Реклама <span style="font-weight:500;text-transform:none;letter-spacing:0;color:#8a9389;font-family:Manrope;font-size:12px">— лиши порожнім для Go/No-Go (без реклами)</span></h2>
+    <div class="grid">
+      <div class="f">
+        <label>CPO — вартість 1 рекл. замовлення, грн</label>
+        <input id="cpo" type="number" inputmode="decimal" placeholder="0"/>
+      </div>
+      <div class="f"><label>&nbsp;</label><div style="height:0"></div></div>
+      <div class="f">
+        <label>Замовлень всього, шт</label>
+        <input id="total" type="number" inputmode="decimal" placeholder="0"/>
+      </div>
+      <div class="f">
+        <label>З них з реклами, шт</label>
+        <input id="adord" type="number" inputmode="decimal" placeholder="0"/>
+      </div>
+    </div>
+  </div>
+
+  <details class="settings">
+    <summary>⚙ Налаштування (за замовчуванням як у вашій таблиці)</summary>
+    <div class="grid">
+      <div class="f"><label>Еквайринг, %</label><input id="acq" type="number" value="1.5"/></div>
+      <div class="f"><label>Бонус Розетка, грн/зам</label><input id="bonus" type="number" value="5"/></div>
+      <div class="f"><label>Середня доставка, грн</label><input id="deliv" type="number" value="30"/></div>
+      <div class="f"><label>Overhead, %</label><input id="oh" type="number" value="15"/></div>
+      <div class="f"><label>Цільова рентабельність, %</label><input id="tgt" type="number" value="20"/></div>
+      <div class="f"><label>Мінімальна рентабельність, %</label><input id="min" type="number" value="15"/></div>
+    </div>
+  </details>
+
+  <div class="verdict is-none" id="verdict">
+    <div class="row">
+      <div>
+        <div class="chip" id="chip">⚪ Введіть ціну й собівартість</div>
+        <div class="decide" id="decide" style="display:none"><span class="dot"></span><span id="decideText"></span></div>
+        <div class="reco" id="reco"></div>
+      </div>
+      <div class="marg" id="marg">—<small>%</small></div>
+    </div>
+    <div class="bd" id="breakdown" style="display:none"></div>
+  </div>
+
+  <footer>
+    Дзеркало формули з аркуша «Рентабельність товару». Прибуток з 1 зам = Ціна − Собівартість − Royalty − Еквайринг − Бонус − Доставка − Overhead − усереднений&nbsp;CPO.<br>
+    <code>🟢 ≥20% · 🟡 15–20% · 🔴 &lt;15% · 🚫 у мінусі</code> · самовикупи (СЗК) тут не рахуються — на воротах Go/No-Go їх немає.
+  </footer>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var ids=['name','price','royalty','cost','usd','ship','rate','cpo','total','adord','acq','bonus','deliv','oh','tgt','min'];
+  ids.forEach(function(id){ $(id).addEventListener('input', recalc); });
+
+  function num(id){ var v=parseFloat($(id).value); return isNaN(v)?0:v; }
+  function has(id){ return $(id).value.trim()!=='' && !isNaN(parseFloat($(id).value)); }
+  function fmt(n){ return (Math.round(n*100)/100).toLocaleString('uk-UA',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+
+  function recalc(){
+    // $ helper -> fill cost in грн
+    if(has('usd') && has('rate')){
+      var c = (num('usd')+num('ship'))*num('rate');
+      $('cost').value = Math.round(c);
+    }
+
+    var price=num('price'), cost=num('cost'), royalty=num('royalty')/100;
+    var acq=num('acq')/100, bonus=num('bonus'), deliv=num('deliv'), oh=num('oh')/100;
+    var tgt=num('tgt'), min=num('min');
+    var cpo=num('cpo'), total=num('total'), adord=num('adord');
+
+    var V=$('verdict'), chip=$('chip'), marg=$('marg'), decide=$('decide'), reco=$('reco'), bd=$('breakdown');
+
+    if(price<=0 || cost<=0){
+      V.className='verdict is-none';
+      chip.textContent='⚪ Введіть ціну й собівартість';
+      marg.innerHTML='—<small>%</small>';
+      decide.style.display='none'; reco.textContent=''; bd.style.display='none';
+      return;
+    }
+
+    var avgCPO = (total>0) ? (cpo*adord)/total : 0;
+    var royaltyС = royalty*price, acqС = acq*price, ohС = oh*price;
+    var profit = price - cost - royaltyС - acqС - bonus - deliv - ohС - avgCPO;
+    var margin = profit/price*100;
+
+    // baseline (без реклами) — для рішення Go/No-Go
+    var baseProfit = price - cost - royaltyС - acqС - bonus - deliv - ohС;
+    var baseMargin = baseProfit/price*100;
+
+    // status by current margin
+    var cls, label;
+    if(profit<0){ cls='is-black'; label='🚫 У мінусі'; }
+    else if(margin>=tgt){ cls='is-green'; label='🟢 Відмінно (≥'+tgt+'%)'; }
+    else if(margin>=min){ cls='is-amber'; label='🟡 Прийнятно ('+min+'–'+tgt+'%)'; }
+    else { cls='is-red'; label='🔴 Збиток (<'+min+'%)'; }
+
+    V.className='verdict '+cls;
+    chip.textContent=label;
+    marg.innerHTML=fmt(margin)+'<small>%</small>';
+
+    // Go/No-Go decision — на базовій (без реклами) маржі
+    var dec, dtext;
+    if(baseMargin>=tgt){ dtext='GO — пріоритет'; }
+    else if(baseMargin>=min){ dtext='GO — ок'; }
+    else { dtext='NO-GO — не замовляти'; }
+    decide.style.display='flex';
+    $('decideText').textContent=dtext;
+    decide.className='decide '+cls;
+
+    var adNote = (avgCPO>0)
+      ? 'Маржа з рекламою '+fmt(margin)+'%. Без реклами (для рішення) — '+fmt(baseMargin)+'%.'
+      : 'Рішення рахується на маржі без реклами: '+fmt(baseMargin)+'%.';
+    reco.textContent=adNote+' Тримай реальну рентабельність ≥'+min+'% — це стеля ставки CPO.';
+
+    // breakdown
+    function line(k,v,neg,tot){ return '<div class="k'+(tot?' tot':'')+'">'+k+'</div><div class="v'+(neg?' neg':'')+(tot?' tot':'')+'">'+v+'</div>'; }
+    var html='';
+    html+=line('Ціна / РРЦ', fmt(price)+' ₴');
+    html+=line('− Собівартість + доставка', '−'+fmt(cost)+' ₴', true);
+    html+=line('− Royalty ('+fmt(royalty*100)+'%)', '−'+fmt(royaltyС)+' ₴', true);
+    html+=line('− Еквайринг ('+fmt(acq*100)+'%)', '−'+fmt(acqС)+' ₴', true);
+    html+=line('− Бонус Розетка', '−'+fmt(bonus)+' ₴', true);
+    html+=line('− Доставка (сер.)', '−'+fmt(deliv)+' ₴', true);
+    html+=line('− Overhead ('+fmt(oh*100)+'%)', '−'+fmt(ohС)+' ₴', true);
+    if(avgCPO>0) html+=line('− Усеред. CPO на 1 зам', '−'+fmt(avgCPO)+' ₴', true);
+    html+=line('= Прибуток з 1 замовлення', fmt(profit)+' ₴', profit<0, true);
+    bd.innerHTML=html; bd.style.display='grid';
+  }
+  recalc();
+})();
+</script>
+</body>
+</html>
