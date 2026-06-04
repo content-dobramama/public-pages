@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Калькулятор ціни входу — Rozetka Промо</title>
+<title>Калькулятор ціни — Rozetka</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
     --bg:#0e0f12; --panel:#16181d; --panel-2:#1c1f26; --line:#2a2e38;
     --ink:#eef0f4; --muted:#8b909c; --faint:#5a5f6b;
     --amber:#f5a524; --amber-dim:#9c6a17;
-    --green:#34d27b; --yellow:#f5d524; --red:#ff5d5d; --blue:#54a7ff;
+    --green:#34d27b; --green-dim:#1c6b42; --yellow:#f5d524; --red:#ff5d5d; --red-dim:#7a2b2b; --blue:#54a7ff;
     --r:14px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -22,26 +22,47 @@
                      radial-gradient(circle at 90% 100%,rgba(84,167,255,.05),transparent 45%);
     min-height:100vh;padding:28px 20px 60px;
   }
-  .wrap{max-width:600px;margin:0 auto}
+  .wrap{max-width:640px;margin:0 auto}
   .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
-        border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px}
-  .title{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(22px,3.2vw,34px);letter-spacing:-.02em;line-height:1.02}
+        border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:18px}
+  .title{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(22px,3.2vw,32px);letter-spacing:-.02em;line-height:1.02}
   .title b{color:var(--amber)}
-  .sub{color:var(--muted);font-size:13px;margin-top:9px;max-width:60ch;line-height:1.5}
+  .sub{color:var(--muted);font-size:13px;margin-top:9px;max-width:62ch;line-height:1.5}
   .sub code{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--amber);background:rgba(245,165,36,.1);padding:1px 6px;border-radius:5px}
+  .sub b{color:#eef0f4}
   .badge{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--amber);border:1px solid var(--amber-dim);border-radius:100px;padding:6px 12px;white-space:nowrap}
 
-  details.settings{margin-bottom:18px;border:1px dashed var(--line);border-radius:12px;background:transparent}
+  .seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px;margin-bottom:16px}
+  .seg button{flex:1;background:transparent;border:0;color:var(--muted);font-family:'IBM Plex Sans';font-size:13px;font-weight:600;padding:10px 8px;border-radius:7px;cursor:pointer;transition:.15s}
+  .seg button.on{background:var(--amber);color:#1a1205}
+
+  details.settings{margin-bottom:16px;border:1px dashed var(--line);border-radius:12px;background:transparent}
   details.settings summary{cursor:pointer;padding:13px 16px;font-size:12.5px;font-weight:600;color:var(--muted);list-style:none;letter-spacing:.02em}
   details.settings summary::-webkit-details-marker{display:none}
   details.settings summary::before{content:"\25B8  ";color:var(--amber)}
   details.settings[open] summary::before{content:"\25BE  "}
   .sbody{padding:0 16px 16px}
-  .sbody .small{font-size:11.5px;color:var(--faint);line-height:1.5;margin-bottom:10px}
-  .srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
-  .srow span{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink)}
-  .reset{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;transition:.15s}
+  .sbody .sh{font-family:'Archivo';font-weight:800;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:14px 0 8px}
+  .sbody .sh:first-child{margin-top:2px}
+  .srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line)}
+  .srow span{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--ink)}
+  .ecogrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .ecogrid .f label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}
+  .reset{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;transition:.15s}
   .reset:hover{color:var(--amber);border-color:var(--amber-dim)}
+
+  /* guide / instruction dropdown */
+  details.guide{margin-bottom:16px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}
+  details.guide summary{cursor:pointer;padding:14px 16px;font-family:'Archivo';font-weight:800;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--amber);list-style:none}
+  details.guide summary::-webkit-details-marker{display:none}
+  details.guide summary::before{content:"\25B8  "}
+  details.guide[open] summary::before{content:"\25BE  "}
+  .gbody{padding:2px 18px 18px;color:var(--muted);font-size:13px;line-height:1.6}
+  .gbody .gh{font-family:'Archivo';font-weight:800;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:14px 0 6px}
+  .gbody ul{margin:4px 0 10px;padding-left:18px}
+  .gbody li{margin:4px 0}
+  .gbody b{color:var(--ink)}
+  .gbody code{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--amber);background:rgba(245,165,36,.1);padding:1px 5px;border-radius:4px}
 
   .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px}
   .card h2{font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
@@ -50,140 +71,279 @@
   .field{margin-bottom:14px}
   .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500}
   .field .hint{color:var(--faint);font-size:11px;font-weight:400}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .inp{display:flex;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;overflow:hidden;transition:border-color .15s}
   .inp:focus-within{border-color:var(--amber)}
-  .inp input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;padding:11px 12px;width:100%}
+  .inp input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:500;padding:11px 12px;width:100%}
   .inp .unit{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--faint);padding:0 13px;white-space:nowrap}
-  .inp.sm{width:120px}.inp.sm input{font-size:14px;padding:8px 10px}
+  .inp.sm input{font-size:13px;padding:8px 10px}
 
   .tierline{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber);background:rgba(245,165,36,.1);border:1px solid var(--amber-dim);border-radius:8px;padding:6px 11px;margin:-4px 0 16px}
 
   .stat.hero{background:linear-gradient(135deg,rgba(245,165,36,.16),rgba(245,165,36,.02));border:1px solid var(--amber-dim);border-radius:12px;padding:18px 18px 16px;margin-top:4px}
   .stat.hero .k{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:9px;letter-spacing:.04em;text-transform:uppercase}
-  .stat.hero .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(40px,10vw,58px);line-height:1;letter-spacing:-.02em;color:var(--amber)}
+  .stat.hero .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(38px,9vw,54px);line-height:1;letter-spacing:-.02em;color:var(--amber)}
   .stat.hero .v small{font-size:.32em;color:var(--faint);font-weight:500}
   .check{font-size:13px;color:var(--muted);line-height:1.5;margin-top:13px}
   .check b{color:var(--ink);font-family:'JetBrains Mono',monospace;font-weight:500}
   .check b.am{color:var(--amber)}
 
-  .divider{height:1px;background:var(--line);margin:18px 0}
-  table{width:100%;border-collapse:collapse;font-size:12.5px}
-  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line)}
-  th{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:500}
-  td{font-family:'JetBrains Mono',monospace;color:var(--ink)}
-  tr.active td{background:rgba(245,165,36,.08);color:var(--amber)}
-  tr.active td:first-child{box-shadow:inset 3px 0 0 var(--amber)}
+  .res3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 8px}
+  @media(max-width:560px){.res3{grid-template-columns:1fr}}
+  .stat{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:13px 14px}
+  .stat .k{font-size:10.5px;color:var(--muted);font-weight:500;margin-bottom:7px;line-height:1.3;text-transform:uppercase;letter-spacing:.03em}
+  .stat .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:22px;line-height:1.05;letter-spacing:-.01em}
+  .stat .vs{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);margin-top:5px;line-height:1.4}
+  .stat.floor{border-color:var(--red-dim)} .stat.floor .v{color:var(--red)}
+  .stat.pen{border-color:var(--amber-dim)} .stat.pen .v{color:var(--amber)}
+  .stat.tgt{border-color:var(--green-dim);background:linear-gradient(135deg,rgba(52,210,123,.14),rgba(52,210,123,.02))} .stat.tgt .v{color:var(--green)}
 
-  footer{margin-top:22px;font-size:11px;color:var(--faint);text-align:center;line-height:1.6;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+  .divider{height:1px;background:var(--line);margin:16px 0}
+  .lbl{font-family:'Archivo';font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:right;padding:8px 8px;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  th{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:500}
+  td{font-family:'JetBrains Mono',monospace;color:var(--ink)}
+  tr.active td{background:rgba(52,210,123,.1)}
+  tr.active td:first-child{box-shadow:inset 3px 0 0 var(--green)}
+  .m-pos{color:var(--green)} .m-mid{color:var(--amber)} .m-neg{color:var(--red)}
+  .warn{font-size:12.5px;color:var(--red);background:rgba(255,93,93,.08);border:1px solid var(--red-dim);border-radius:9px;padding:11px 13px;margin-top:6px;line-height:1.5}
+
+  .note{font-size:11.5px;color:var(--faint);line-height:1.55;margin-top:12px}
+  footer{margin-top:20px;font-size:11px;color:var(--faint);text-align:center;line-height:1.6;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="head">
     <div>
-      <div class="title">З якою ціною <b>заходити</b></div>
-      <p class="sub">Введи цільову РРЦ (= бажану промо-ціну). Калькулятор покаже, з якої ціни виставити товар, щоб після промо-знижки Розетки вийти рівно на неї. <code>вхід = РРЦ ÷ (1 − знижка)</code></p>
+      <div class="title">Ціна входу <b>на Rozetka</b></div>
+      <p class="sub"><b>Фінальна ціна</b> — вхід під цільову промо-ціну (з промо-перерахунком). <b>Цінова драбина</b> — працює напряму з <b>ціною зі знижкою</b> (фактична ціна продажу), без промо.</p>
     </div>
-    <div class="badge">Rozetka · промо</div>
+    <div class="badge">Rozetka · ціна</div>
+  </div>
+
+  <div class="seg">
+    <button id="mFinal" class="on" onclick="setMode('final')">Фінальна ціна (промо)</button>
+    <button id="mLadder" onclick="setMode('ladder')">Цінова драбина</button>
   </div>
 
   <details class="settings">
-    <summary>Налаштування знижок за діапазоном</summary>
+    <summary>Налаштування</summary>
     <div class="sbody">
-      <p class="small">Редагуй % знижки для кожного діапазону РРЦ. Зміни діють на поточну сесію й одразу впливають на розрахунок.</p>
-      <div id="srows"></div>
-      <button class="reset" id="reset">&#8635; Скинути до типових (10 / 7 / 5 / 3)</button>
+      <div id="grpTiers">
+        <div class="sh">Знижки промо за діапазоном (для «Фінальної ціни»)</div>
+        <p class="note" style="margin-top:0">Діє на поточну сесію.</p>
+        <div id="srows"></div>
+      </div>
+      <div id="grpEco">
+        <div class="sh">Економіка (для драбини) — типові як у вашій таблиці</div>
+        <div class="ecogrid">
+          <div class="f"><label>Еквайринг, %</label><div class="inp sm"><input id="acq" type="number" value="1.5" step="0.1"><span class="unit">%</span></div></div>
+          <div class="f"><label>Overhead, %</label><div class="inp sm"><input id="oh" type="number" value="15" step="0.5"><span class="unit">%</span></div></div>
+          <div class="f"><label>Бонус Розетка, грн</label><div class="inp sm"><input id="bonus" type="number" value="5" step="1"><span class="unit">грн</span></div></div>
+          <div class="f"><label>Доставка (сер.), грн</label><div class="inp sm"><input id="deliv" type="number" value="30" step="1"><span class="unit">грн</span></div></div>
+          <div class="f"><label>Маржа вхідної ціни, %</label><div class="inp sm"><input id="penm" type="number" value="5" step="0.5"><span class="unit">%</span></div></div>
+        </div>
+      </div>
+      <button class="reset" id="reset">&#8635; Скинути до типових</button>
     </div>
   </details>
 
-  <div class="card">
-    <h2>Розрахунок</h2>
-
+  <!-- MODE A: FINAL PRICE (promo) -->
+  <div class="card" id="cardFinal">
+    <h2>Фінальна ціна — вхід під цільову промо</h2>
     <div class="field">
-      <label>Цільова РРЦ <span class="hint">= бажана промо-ціна, на що хочемо вийти</span></label>
+      <label>Цільова РРЦ <span class="hint">= бажана промо-ціна</span></label>
       <div class="inp"><input id="rrp" type="number" inputmode="decimal" value="1000" min="1" step="1"><span class="unit">грн</span></div>
     </div>
-
-    <div id="tier" class="tierline"></div>
-
+    <div id="tierA" class="tierline"></div>
     <div class="field">
-      <label>Знижка діапазону <span class="hint">авто з діапазону, можна змінити</span></label>
+      <label>Знижка діапазону <span class="hint">авто, можна змінити</span></label>
       <div class="inp"><input id="disc" type="number" inputmode="decimal" value="7" min="0" max="60" step="0.5"><span class="unit">%</span></div>
     </div>
-
     <div class="stat hero">
       <div class="k">Виставити на Розетку — ціна входу</div>
       <div class="v"><span id="entry">—</span> <small>грн</small></div>
     </div>
     <p class="check">Знижка <b class="am" id="dShow">7%</b> &rarr; промо-ціна <b id="promoShow">—</b> &asymp; РРЦ <b id="rrpShow">—</b>.</p>
-
     <div class="divider"></div>
-    <table>
-      <thead><tr><th>Діапазон РРЦ</th><th>Знижка Rozetka</th></tr></thead>
-      <tbody id="tierTable"></tbody>
-    </table>
+    <table><thead><tr><th>Діапазон РРЦ</th><th>Знижка</th></tr></thead><tbody id="tierTable"></tbody></table>
   </div>
 
-  <footer>Воронка 2.0 &middot; промо-ціна = цільова РРЦ</footer>
+  <!-- MODE B: PRICE LADDER (selling price, no promo) -->
+  <div class="card" id="cardLadder" style="display:none">
+    <h2>Цінова драбина — по ціні зі знижкою</h2>
+
+    <details class="guide">
+      <summary>Як це працює — стратегія й інструкція</summary>
+      <div class="gbody">
+        <div class="gh">Загальна логіка стратегії</div>
+        <ul>
+          <li>Заходимо з <b>низькою ціною зі знижкою</b> (близько до беззбитковості, тонка маржа) — щоб бути помітно дешевшими за конкурентів.</li>
+          <li>Низька ціна &rarr; висока конверсія &rarr; швидкі органічні продажі &rarr; Rozetka піднімає картку у видачі. Так <b>дешево купуємо ранг і перші реальні відгуки</b> — часто дешевше, ніж рекламою.</li>
+          <li>Коли товар «сів» у видачі й тримає швидкість — <b>поступово підіймаємо ціну кроками</b>.</li>
+          <li>На кожному кроці дивимось у MetaBase: чи тримається швидкість / позиція / конверсія. Підіймаємо, поки швидкість &ge; цільової (конкурент +20% за 14 днів). <b>Зупиняємось на кроці перед тим, де швидкість ламається</b> — це ринкова ціна товару.</li>
+          <li>Ніколи не опускаємось <b>нижче підлоги</b> (беззбитковості). Стежимо за запасом — дешева фаза швидко з'їдає сток.</li>
+          <li>Успіх = ранг тримається на ціні з <b>маржею &ge; цілі</b>, а не на ціні-приманці.</li>
+        </ul>
+        <div class="gh">Інструкція до калькулятора</div>
+        <ul>
+          <li><b>Вводиш:</b> собівартість+доставку (landed), Royalty (комісія Розетки), цільову маржу. За бажання — звичайну ціну зі знижкою (ринковий орієнтир).</li>
+          <li><b>Підлога</b> — ціна продажу з маржею 0%; нижче не торгуєш.</li>
+          <li><b>Вхідна ціна</b> — беззбиткова, з тонкою маржею: з неї стартуєш (penetration).</li>
+          <li><b>Цільова ціна</b> — на якій виходиш на потрібну маржу; мета драбини.</li>
+          <li><b>Таблиця</b> — для кожної ціни зі знижкою показує маржу і <code>Δ від звичайної</code> (на скільки % дешевше/дорожче за ринок). Зелене &ge; цілі, янтарне між, червоне — мінус. Підсвічений рядок — цільовий.</li>
+          <li>Службові константи (еквайринг, overhead, бонус, доставка, маржа входу) — у «Налаштуваннях».</li>
+        </ul>
+      </div>
+    </details>
+
+    <div class="row2">
+      <div class="field" style="margin-bottom:0">
+        <label>Собівартість + доставка <span class="hint">landed, грн</span></label>
+        <div class="inp"><input id="cost" type="number" inputmode="decimal" placeholder="280" min="0" step="1"><span class="unit">грн</span></div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Royalty (комісія Розетки)</label>
+        <div class="inp"><input id="roy" type="number" inputmode="decimal" value="18" min="0" max="60" step="0.5"><span class="unit">%</span></div>
+      </div>
+    </div>
+    <div class="row2" style="margin-top:14px">
+      <div class="field" style="margin-bottom:0">
+        <label>Цільова маржа <span class="hint">чиста</span></label>
+        <div class="inp"><input id="tgtm" type="number" inputmode="decimal" value="25" min="0" max="80" step="1"><span class="unit">%</span></div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Звичайна ціна зі знижкою <span class="hint">орієнтир, необов'язково</span></label>
+        <div class="inp"><input id="ref" type="number" inputmode="decimal" placeholder="напр. 749" min="0" step="1"><span class="unit">грн</span></div>
+      </div>
+    </div>
+
+    <div id="ladderWarn"></div>
+
+    <div class="res3" style="margin-top:16px">
+      <div class="stat floor"><div class="k">Підлога (беззбиток)</div><div class="v" id="floorV">—</div><div class="vs" id="floorS">ціна продажу</div></div>
+      <div class="stat pen"><div class="k">Вхідна ціна</div><div class="v" id="penV">—</div><div class="vs" id="penS">тонка маржа</div></div>
+      <div class="stat tgt"><div class="k">Цільова ціна</div><div class="v" id="tgtV">—</div><div class="vs" id="tgtS">маржа ціль</div></div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="lbl">Драбина: ціна зі знижкою → маржа</div>
+    <table>
+      <thead><tr id="ladderHead"><th>Ціна зі знижкою</th><th>Маржа</th></tr></thead>
+      <tbody id="ladderTable"></tbody>
+    </table>
+    <p class="note">Ціна зі знижкою = фактична ціна продажу (промо-перерахунок Rozetka тут не враховується). Маржа без реклами — CPO віднімай окремо.</p>
+  </div>
+
+  <footer>Воронка 2.0 &middot; драбина працює по ціні зі знижкою</footer>
 </div>
 
 <script>
-  const DEFAULTS = [10, 7, 5, 3];
-  const tiers = [
-    {label:'до 500 грн',     min:0,    max:500,      d:DEFAULTS[0]},
-    {label:'500–1000 грн',   min:500,  max:1000,     d:DEFAULTS[1]},
-    {label:'1000–3000 грн',  min:1000, max:3000,     d:DEFAULTS[2]},
-    {label:'понад 3000 грн', min:3000, max:Infinity, d:DEFAULTS[3]},
+  const DEFAULTS=[10,7,5,3];
+  const ECO_DEF={acq:1.5,oh:15,bonus:5,deliv:30,penm:5};
+  const tiers=[
+    {label:'до 500 грн',min:0,max:500,d:DEFAULTS[0]},
+    {label:'500–1000 грн',min:500,max:1000,d:DEFAULTS[1]},
+    {label:'1000–3000 грн',min:1000,max:3000,d:DEFAULTS[2]},
+    {label:'понад 3000 грн',min:3000,max:Infinity,d:DEFAULTS[3]},
   ];
-  const $ = id => document.getElementById(id);
-  const fmt = n => isFinite(n) ? Math.round(n).toLocaleString('uk-UA') : '—';
-  const fmtP = n => (Math.round(n*10)/10).toString().replace('.', ',');
-  function tierIndexFor(p){
-    for(let i=0;i<tiers.length;i++){ const t=tiers[i]; if(p>t.min && p<=t.max) return i; }
-    return p<=0 ? 0 : tiers.length-1;
-  }
-  let lastKey = null;
+  const $=id=>document.getElementById(id);
+  const num=id=>{const v=parseFloat($(id).value);return isNaN(v)?0:v;};
+  const fmt=n=>isFinite(n)?Math.round(n).toLocaleString('uk-UA'):'—';
+  const fmtP=n=>(Math.round(n*10)/10).toString().replace('.',',');
+  const dpct=(p,ref)=>{const x=(p-ref)/ref*100;return (x>=0?'+':'')+fmtP(x)+'%';};
+  function tIndex(p){for(let i=0;i<tiers.length;i++){if(p>tiers[i].min&&p<=tiers[i].max)return i;}return p<=0?0:tiers.length-1;}
 
+  // ---------- settings ----------
   function buildSettings(){
-    $('srows').innerHTML = tiers.map((t,i)=>
-      `<div class="srow"><span>${t.label}</span><div class="inp sm"><input type="number" data-i="${i}" value="${fmtP(t.d)}" min="0" max="60" step="0.5"><span class="unit">%</span></div></div>`
+    $('srows').innerHTML=tiers.map((t,i)=>
+      `<div class="srow"><span>${t.label}</span><div class="inp sm" style="width:110px"><input type="number" data-i="${i}" value="${fmtP(t.d)}" min="0" max="60" step="0.5"><span class="unit">%</span></div></div>`
     ).join('');
     $('srows').querySelectorAll('input').forEach(inp=>{
-      inp.addEventListener('input', ()=>{
-        const i=+inp.dataset.i;
-        tiers[i].d = Math.min(Math.max(parseFloat(inp.value)||0,0),59.9);
-        if(tierIndexFor(parseFloat($('rrp').value)||0)===i) $('disc').value = fmtP(tiers[i].d);
-        recalc();
-      });
+      inp.addEventListener('input',()=>{const i=+inp.dataset.i;tiers[i].d=Math.min(Math.max(parseFloat(inp.value)||0,0),59.9);lastKey=null;recalc();});
     });
   }
-  $('reset').onclick = ()=>{ tiers.forEach((t,i)=> t.d=DEFAULTS[i]); buildSettings(); lastKey=null; recalc(); };
+  $('reset').onclick=()=>{tiers.forEach((t,i)=>t.d=DEFAULTS[i]);$('acq').value=ECO_DEF.acq;$('oh').value=ECO_DEF.oh;$('bonus').value=ECO_DEF.bonus;$('deliv').value=ECO_DEF.deliv;$('penm').value=ECO_DEF.penm;buildSettings();lastKey=null;recalc();};
 
-  function recalc(){
-    const rrp = parseFloat($('rrp').value)||0;
-    const ti = tierIndexFor(rrp);
-    const t = tiers[ti];
-    if(t.label!==lastKey){ $('disc').value = fmtP(t.d); lastKey=t.label; }
+  // ---------- mode toggle ----------
+  let mode='final';
+  function setMode(m){mode=m;
+    $('mFinal').classList.toggle('on',m==='final');
+    $('mLadder').classList.toggle('on',m==='ladder');
+    $('cardFinal').style.display=m==='final'?'':'none';
+    $('cardLadder').style.display=m==='ladder'?'':'none';
+    // settings: промо-знижки лише для «Фінальної ціни»; економіка лише для драбини
+    $('grpTiers').style.display=m==='final'?'':'none';
+    $('grpEco').style.display=m==='ladder'?'':'none';
+    recalc();
+  }
+  window.setMode=setMode;
 
-    $('tier').innerHTML = `&#9670; Діапазон: ${t.label} · знижка ~${fmtP(t.d)}%`;
-    $('tierTable').innerHTML = tiers.map((x,i)=>{
-      const on = i===ti ? ' class="active"' : '';
-      return `<tr${on}><td>${x.label}</td><td>~${fmtP(x.d)}%</td></tr>`;
-    }).join('');
-
-    const d = Math.min(Math.max(parseFloat($('disc').value)||0,0),59.9);
-    const f = 1 - d/100;
-    $('dShow').textContent = fmtP(d)+'%';
-    if(rrp<=0 || f<=0){ $('entry').textContent='—'; $('promoShow').textContent='—'; $('rrpShow').textContent='—'; return; }
-    const entry = Math.ceil(rrp/f);
-    $('entry').textContent = fmt(entry);
-    $('promoShow').textContent = fmt(entry*f)+' грн';
-    $('rrpShow').textContent = fmt(rrp)+' грн';
+  // ---------- MODE A: final price (promo) ----------
+  let lastKey=null;
+  function recalcFinal(){
+    const rrp=num('rrp'),ti=tIndex(rrp),t=tiers[ti];
+    if(t.label!==lastKey){$('disc').value=fmtP(t.d);lastKey=t.label;}
+    $('tierA').innerHTML=`&#9670; Діапазон: ${t.label} · знижка ~${fmtP(t.d)}%`;
+    $('tierTable').innerHTML=tiers.map((x,i)=>`<tr${i===ti?' class="active"':''}><td>${x.label}</td><td>~${fmtP(x.d)}%</td></tr>`).join('');
+    const d=Math.min(Math.max(num('disc'),0),59.9),f=1-d/100;
+    $('dShow').textContent=fmtP(d)+'%';
+    if(rrp<=0||f<=0){$('entry').textContent='—';$('promoShow').textContent='—';$('rrpShow').textContent='—';return;}
+    const entry=Math.ceil(rrp/f);
+    $('entry').textContent=fmt(entry);
+    $('promoShow').textContent=fmt(entry*f)+' грн';
+    $('rrpShow').textContent=fmt(rrp)+' грн';
   }
 
-  ['rrp','disc'].forEach(id=> $(id).addEventListener('input', recalc));
+  // ---------- MODE B: price ladder (selling price = ціна зі знижкою) ----------
+  function marginAt(P,r,fixed,cost){const profit=P*(1-r)-cost-fixed;return profit/P*100;}
+  function recalcLadder(){
+    const cost=num('cost'),roy=num('roy'),tgtm=num('tgtm'),ref=num('ref');
+    const r=(roy+num('acq')+num('oh'))/100, fixed=num('bonus')+num('deliv'), penm=num('penm');
+    const W=$('ladderWarn');
+    const hasRef = ref>0;
+    $('ladderHead').innerHTML = hasRef
+      ? '<th>Ціна зі знижкою</th><th>Маржа</th><th>Δ від звичайної</th>'
+      : '<th>Ціна зі знижкою</th><th>Маржа</th>';
+
+    if(cost<=0){W.innerHTML='';['floorV','penV','tgtV'].forEach(id=>$(id).textContent='—');$('ladderTable').innerHTML='';return;}
+    if(r>=1){W.innerHTML='<div class="warn">Сума комісій ≥100% ціни — перевір Royalty / Overhead / Еквайринг.</div>';['floorV','penV','tgtV'].forEach(id=>$(id).textContent='—');$('ladderTable').innerHTML='';return;}
+
+    const P0=(cost+fixed)/(1-r);
+    const needT=(1-r)-tgtm/100, needP=(1-r)-penm/100;
+    const Pt = needT>0 ? (cost+fixed)/needT : Infinity;
+    const Pp = needP>0 ? (cost+fixed)/needP : Infinity;
+
+    $('floorV').textContent=fmt(P0);
+    $('floorS').innerHTML = hasRef ? `маржа 0% · ${dpct(P0,ref)}` : 'маржа 0%';
+    if(isFinite(Pp)){$('penV').textContent=fmt(Pp);$('penS').innerHTML=`маржа ${fmtP(penm)}%`+(hasRef?` · ${dpct(Pp,ref)}`:'');}else{$('penV').textContent='—';}
+    if(isFinite(Pt)){$('tgtV').textContent=fmt(Pt);$('tgtS').innerHTML=`маржа ${fmtP(tgtm)}%`+(hasRef?` · ${dpct(Pt,ref)}`:'');}else{$('tgtV').textContent='—';$('tgtS').textContent='ціль недосяжна';}
+
+    if(!isFinite(Pt)) W.innerHTML=`<div class="warn">Цільова маржа ${fmtP(tgtm)}% недосяжна за цих витрат (стеля чистої маржі ≈${fmtP((1-r)*100)}% до фікс. витрат). Знизь маржу або собівартість.</div>`;
+    else W.innerHTML='';
+
+    const startP=isFinite(Pp)?Pp:P0;
+    const topP=Math.max(isFinite(Pt)?Pt:startP*2, hasRef?ref:0);
+    const endP=topP*1.3;
+    const n=9, step=(endP-startP)/(n-1);
+    let rows='', bestIdx=-1, bestDiff=1e9; const data=[];
+    for(let i=0;i<n;i++){const P=Math.round(startP+step*i), mg=marginAt(P,r,fixed,cost);data.push({P:P,m:mg});const diff=Math.abs(mg-tgtm);if(diff<bestDiff){bestDiff=diff;bestIdx=i;}}
+    data.forEach((row,i)=>{
+      const cls=row.m<0?'m-neg':(row.m<tgtm?'m-mid':'m-pos');
+      const dcol = hasRef ? `<td>${dpct(row.P,ref)}</td>` : '';
+      rows+=`<tr${i===bestIdx?' class="active"':''}><td>${fmt(row.P)}</td><td class="${cls}">${fmtP(row.m)}%</td>${dcol}</tr>`;
+    });
+    $('ladderTable').innerHTML=rows;
+  }
+
+  function recalc(){ if(mode==='final') recalcFinal(); else recalcLadder(); }
+
+  ['rrp','disc','cost','roy','tgtm','ref','acq','oh','bonus','deliv','penm'].forEach(id=>$(id).addEventListener('input',recalc));
   buildSettings();
-  recalc();
+  setMode('final');
 </script>
 </body>
 </html>
