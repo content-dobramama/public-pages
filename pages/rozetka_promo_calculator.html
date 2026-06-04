@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Калькулятор ціни входу — Rozetka Промо</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e0f12; --panel:#16181d; --panel-2:#1c1f26; --line:#2a2e38;
+    --ink:#eef0f4; --muted:#8b909c; --faint:#5a5f6b;
+    --amber:#f5a524; --amber-dim:#9c6a17;
+    --green:#34d27b; --yellow:#f5d524; --red:#ff5d5d; --blue:#54a7ff;
+    --r:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased}
+  body{
+    background-image:radial-gradient(circle at 12% 0%,rgba(245,165,36,.07),transparent 40%),
+                     radial-gradient(circle at 90% 100%,rgba(84,167,255,.05),transparent 45%);
+    min-height:100vh;padding:28px 20px 60px;
+  }
+  .wrap{max-width:600px;margin:0 auto}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
+        border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px}
+  .title{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(22px,3.2vw,34px);letter-spacing:-.02em;line-height:1.02}
+  .title b{color:var(--amber)}
+  .sub{color:var(--muted);font-size:13px;margin-top:9px;max-width:60ch;line-height:1.5}
+  .sub code{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--amber);background:rgba(245,165,36,.1);padding:1px 6px;border-radius:5px}
+  .badge{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--amber);border:1px solid var(--amber-dim);border-radius:100px;padding:6px 12px;white-space:nowrap}
+
+  details.settings{margin-bottom:18px;border:1px dashed var(--line);border-radius:12px;background:transparent}
+  details.settings summary{cursor:pointer;padding:13px 16px;font-size:12.5px;font-weight:600;color:var(--muted);list-style:none;letter-spacing:.02em}
+  details.settings summary::-webkit-details-marker{display:none}
+  details.settings summary::before{content:"\25B8  ";color:var(--amber)}
+  details.settings[open] summary::before{content:"\25BE  "}
+  .sbody{padding:0 16px 16px}
+  .sbody .small{font-size:11.5px;color:var(--faint);line-height:1.5;margin-bottom:10px}
+  .srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+  .srow span{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink)}
+  .reset{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;transition:.15s}
+  .reset:hover{color:var(--amber);border-color:var(--amber-dim)}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+  .card h2{font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .card h2::before{content:"";width:7px;height:7px;background:var(--amber);border-radius:2px;transform:rotate(45deg)}
+
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500}
+  .field .hint{color:var(--faint);font-size:11px;font-weight:400}
+  .inp{display:flex;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;overflow:hidden;transition:border-color .15s}
+  .inp:focus-within{border-color:var(--amber)}
+  .inp input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;padding:11px 12px;width:100%}
+  .inp .unit{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--faint);padding:0 13px;white-space:nowrap}
+  .inp.sm{width:120px}.inp.sm input{font-size:14px;padding:8px 10px}
+
+  .tierline{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber);background:rgba(245,165,36,.1);border:1px solid var(--amber-dim);border-radius:8px;padding:6px 11px;margin:-4px 0 16px}
+
+  .stat.hero{background:linear-gradient(135deg,rgba(245,165,36,.16),rgba(245,165,36,.02));border:1px solid var(--amber-dim);border-radius:12px;padding:18px 18px 16px;margin-top:4px}
+  .stat.hero .k{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:9px;letter-spacing:.04em;text-transform:uppercase}
+  .stat.hero .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(40px,10vw,58px);line-height:1;letter-spacing:-.02em;color:var(--amber)}
+  .stat.hero .v small{font-size:.32em;color:var(--faint);font-weight:500}
+  .check{font-size:13px;color:var(--muted);line-height:1.5;margin-top:13px}
+  .check b{color:var(--ink);font-family:'JetBrains Mono',monospace;font-weight:500}
+  .check b.am{color:var(--amber)}
+
+  .divider{height:1px;background:var(--line);margin:18px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line)}
+  th{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:500}
+  td{font-family:'JetBrains Mono',monospace;color:var(--ink)}
+  tr.active td{background:rgba(245,165,36,.08);color:var(--amber)}
+  tr.active td:first-child{box-shadow:inset 3px 0 0 var(--amber)}
+
+  footer{margin-top:22px;font-size:11px;color:var(--faint);text-align:center;line-height:1.6;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <div class="title">З якою ціною <b>заходити</b></div>
+      <p class="sub">Введи цільову РРЦ (= бажану промо-ціну). Калькулятор покаже, з якої ціни виставити товар, щоб після промо-знижки Розетки вийти рівно на неї. <code>вхід = РРЦ ÷ (1 − знижка)</code></p>
+    </div>
+    <div class="badge">Rozetka · промо</div>
+  </div>
+
+  <details class="settings">
+    <summary>Налаштування знижок за діапазоном</summary>
+    <div class="sbody">
+      <p class="small">Редагуй % знижки для кожного діапазону РРЦ. Зміни діють на поточну сесію й одразу впливають на розрахунок.</p>
+      <div id="srows"></div>
+      <button class="reset" id="reset">&#8635; Скинути до типових (10 / 7 / 5 / 3)</button>
+    </div>
+  </details>
+
+  <div class="card">
+    <h2>Розрахунок</h2>
+
+    <div class="field">
+      <label>Цільова РРЦ <span class="hint">= бажана промо-ціна, на що хочемо вийти</span></label>
+      <div class="inp"><input id="rrp" type="number" inputmode="decimal" value="1000" min="1" step="1"><span class="unit">грн</span></div>
+    </div>
+
+    <div id="tier" class="tierline"></div>
+
+    <div class="field">
+      <label>Знижка діапазону <span class="hint">авто з діапазону, можна змінити</span></label>
+      <div class="inp"><input id="disc" type="number" inputmode="decimal" value="7" min="0" max="60" step="0.5"><span class="unit">%</span></div>
+    </div>
+
+    <div class="stat hero">
+      <div class="k">Виставити на Розетку — ціна входу</div>
+      <div class="v"><span id="entry">—</span> <small>грн</small></div>
+    </div>
+    <p class="check">Знижка <b class="am" id="dShow">7%</b> &rarr; промо-ціна <b id="promoShow">—</b> &asymp; РРЦ <b id="rrpShow">—</b>.</p>
+
+    <div class="divider"></div>
+    <table>
+      <thead><tr><th>Діапазон РРЦ</th><th>Знижка Rozetka</th></tr></thead>
+      <tbody id="tierTable"></tbody>
+    </table>
+  </div>
+
+  <footer>Воронка 2.0 &middot; промо-ціна = цільова РРЦ</footer>
+</div>
+
+<script>
+  const DEFAULTS = [10, 7, 5, 3];
+  const tiers = [
+    {label:'до 500 грн',     min:0,    max:500,      d:DEFAULTS[0]},
+    {label:'500–1000 грн',   min:500,  max:1000,     d:DEFAULTS[1]},
+    {label:'1000–3000 грн',  min:1000, max:3000,     d:DEFAULTS[2]},
+    {label:'понад 3000 грн', min:3000, max:Infinity, d:DEFAULTS[3]},
+  ];
+  const $ = id => document.getElementById(id);
+  const fmt = n => isFinite(n) ? Math.round(n).toLocaleString('uk-UA') : '—';
+  const fmtP = n => (Math.round(n*10)/10).toString().replace('.', ',');
+  function tierIndexFor(p){
+    for(let i=0;i<tiers.length;i++){ const t=tiers[i]; if(p>t.min && p<=t.max) return i; }
+    return p<=0 ? 0 : tiers.length-1;
+  }
+  let lastKey = null;
+
+  function buildSettings(){
+    $('srows').innerHTML = tiers.map((t,i)=>
+      `<div class="srow"><span>${t.label}</span><div class="inp sm"><input type="number" data-i="${i}" value="${fmtP(t.d)}" min="0" max="60" step="0.5"><span class="unit">%</span></div></div>`
+    ).join('');
+    $('srows').querySelectorAll('input').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const i=+inp.dataset.i;
+        tiers[i].d = Math.min(Math.max(parseFloat(inp.value)||0,0),59.9);
+        if(tierIndexFor(parseFloat($('rrp').value)||0)===i) $('disc').value = fmtP(tiers[i].d);
+        recalc();
+      });
+    });
+  }
+  $('reset').onclick = ()=>{ tiers.forEach((t,i)=> t.d=DEFAULTS[i]); buildSettings(); lastKey=null; recalc(); };
+
+  function recalc(){
+    const rrp = parseFloat($('rrp').value)||0;
+    const ti = tierIndexFor(rrp);
+    const t = tiers[ti];
+    if(t.label!==lastKey){ $('disc').value = fmtP(t.d); lastKey=t.label; }
+
+    $('tier').innerHTML = `&#9670; Діапазон: ${t.label} · знижка ~${fmtP(t.d)}%`;
+    $('tierTable').innerHTML = tiers.map((x,i)=>{
+      const on = i===ti ? ' class="active"' : '';
+      return `<tr${on}><td>${x.label}</td><td>~${fmtP(x.d)}%</td></tr>`;
+    }).join('');
+
+    const d = Math.min(Math.max(parseFloat($('disc').value)||0,0),59.9);
+    const f = 1 - d/100;
+    $('dShow').textContent = fmtP(d)+'%';
+    if(rrp<=0 || f<=0){ $('entry').textContent='—'; $('promoShow').textContent='—'; $('rrpShow').textContent='—'; return; }
+    const entry = Math.ceil(rrp/f);
+    $('entry').textContent = fmt(entry);
+    $('promoShow').textContent = fmt(entry*f)+' грн';
+    $('rrpShow').textContent = fmt(rrp)+' грн';
+  }
+
+  ['rrp','disc'].forEach(id=> $(id).addEventListener('input', recalc));
+  buildSettings();
+  recalc();
+</script>
+</body>
+</html>
