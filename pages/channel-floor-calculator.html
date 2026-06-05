@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Розрахунок ціни для товарів на Exit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e0f12; --panel:#16181d; --panel-2:#1c1f26; --line:#2a2e38;
+    --ink:#eef0f4; --muted:#8b909c; --faint:#5a5f6b;
+    --amber:#f5a524; --amber-dim:#9c6a17;
+    --green:#34d27b; --yellow:#f5d524; --red:#ff5d5d; --blue:#54a7ff;
+    --r:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased}
+  body{
+    background-image:radial-gradient(circle at 12% 0%,rgba(245,165,36,.07),transparent 40%),
+                     radial-gradient(circle at 90% 100%,rgba(52,210,123,.05),transparent 45%);
+    min-height:100vh;padding:28px 20px 60px;
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px}
+  .title{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(22px,3.2vw,34px);letter-spacing:-.02em;line-height:1}
+  .title b{color:var(--amber)}
+  .sub{color:var(--muted);font-size:13px;margin-top:8px;max-width:620px;line-height:1.5}
+  .badge{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--amber);border:1px solid var(--amber-dim);border-radius:100px;padding:6px 12px;white-space:nowrap}
+
+  .help{background:linear-gradient(135deg,rgba(245,165,36,.08),rgba(245,165,36,.01));border:1px solid var(--amber-dim);border-radius:var(--r);margin-bottom:22px;overflow:hidden}
+  .help summary{list-style:none;cursor:pointer;padding:15px 20px;font-family:'Archivo',sans-serif;font-weight:800;font-size:14px;letter-spacing:.02em;display:flex;align-items:center;gap:10px;color:var(--amber)}
+  .help summary::-webkit-details-marker{display:none}
+  .help summary .chev{margin-left:auto;transition:transform .2s;color:var(--muted);font-size:12px}
+  .help[open] summary .chev{transform:rotate(180deg)}
+  .help .body{padding:0 20px 18px;font-size:13px;line-height:1.6}
+  .help .body p{margin-bottom:8px;color:var(--ink)}
+  .help .body b{color:var(--amber)}
+  .help .body ul{margin:0 0 12px 18px}
+  .help .body li{margin-bottom:5px;color:var(--muted)}
+  .help .body li b{color:var(--ink)}
+  .help .body code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--panel-2);padding:1px 6px;border-radius:4px;color:var(--ink)}
+  .help .rule{background:rgba(255,93,93,.08);border:1px solid rgba(255,93,93,.3);border-radius:9px;padding:10px 13px;margin-top:4px;color:var(--ink);font-size:12.5px}
+
+  .grid{display:grid;grid-template-columns:360px 1fr;gap:22px;align-items:start}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+  .card h2{font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .card h2::before{content:"";width:7px;height:7px;background:var(--amber);border-radius:2px;transform:rotate(45deg)}
+  .card+.card{margin-top:22px}
+
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500}
+  .field .hint{color:var(--faint);font-size:11px;font-weight:400}
+  .inp{display:flex;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;overflow:hidden;transition:border-color .15s}
+  .inp:focus-within{border-color:var(--amber)}
+  .inp input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:500;padding:10px 12px;width:100%}
+  .inp .unit{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);padding:0 12px;white-space:nowrap}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .small{font-size:11px;color:var(--faint);line-height:1.5;margin-top:4px}
+
+  details.settings{margin-top:4px;border:1px dashed var(--line);border-radius:12px}
+  details.settings summary{list-style:none;cursor:pointer;padding:12px 14px;font-size:12.5px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+  details.settings summary::-webkit-details-marker{display:none}
+  details.settings summary::before{content:"\25b8 ";color:var(--amber)}
+  details.settings[open] summary::before{content:"\25be "}
+  details.settings .pad{padding:2px 14px 14px}
+  details.settings .inp input{font-size:14px;padding:8px 10px}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  th,td{text-align:right;padding:10px 8px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}
+  td:first-child,th:first-child{text-align:left}
+  td{font-family:'JetBrains Mono';font-weight:500}
+  .ch-name{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-family:'IBM Plex Sans';font-weight:600;font-size:13px;padding:7px 9px;outline:0;width:118px}
+  .ch-name:focus{border-color:var(--amber)}
+  .roy-inp{display:inline-flex;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;overflow:hidden;width:78px}
+  .roy-inp:focus-within{border-color:var(--amber)}
+  .roy-inp input{width:100%;background:transparent;border:0;outline:0;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13px;padding:7px 4px 7px 9px;text-align:right}
+  .roy-inp .u{font-size:10px;color:var(--faint);padding:0 7px 0 2px}
+  td.floor{color:var(--red);font-weight:700}
+  td.pen{color:var(--amber)}
+  td.tgt{color:var(--green);font-weight:700}
+  td.mg.pos{color:var(--green)} td.mg.mid{color:var(--amber)} td.mg.neg{color:var(--red)}
+  .dash{color:var(--faint)}
+
+  .legendrow{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--muted)}
+  .legendrow i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+  .warn{background:rgba(255,93,93,.08);border:1px solid rgba(255,93,93,.35);border-radius:9px;padding:10px 13px;font-size:12.5px;color:var(--ink);margin-bottom:12px}
+
+  .anim{opacity:0;transform:translateY(8px);animation:rise .5s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .foot{color:var(--faint);font-size:11px;line-height:1.6;margin-top:22px;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head anim">
+    <div>
+      <div class="title">Розрахунок ціни для товарів на <b>Exit</b></div>
+      <div class="sub">Для Тімліда. Коли товар на Exit і треба знизити ціну, щоб розпродати залишок — показує, до якої ціни можна опускатись на кожному каналі за його роялті. <strong>Беззбиток (0%)</strong> — абсолютна підлога: нижче неї продаж у мінус. Нагадування правила: до гуртової опускаєшся сам, нижче — через погодження Керівника.</div>
+    </div>
+    <div class="badge">EXIT · ЦІНА ПО КАНАЛАХ</div>
+  </div>
+
+  <details class="help anim" style="animation-delay:.06s">
+    <summary>❓ Як це працює — логіка й інструкція <span class="chev">▾</span></summary>
+    <div class="body">
+      <p>Показує, <b>до якої ціни можна опускатись</b> на кожному каналі, лишаючись у заданій маржі — і де абсолютна підлога (беззбиток). Логіка витрат ідентична «Ціновій драбині».</p>
+      <p><b>Що ввести:</b></p>
+      <ul>
+        <li><b>Собівартість + доставка (landed)</b> — повна закупівельна вартість одиниці на складі.</li>
+        <li><b>Роялті по каналах</b> — комісія кожного каналу окремо (редагується в таблиці). Для <b>Опенкарт, ОЛХ, Шафа</b> роялті фіксоване (вже виставлене). Для решти каналів (Розетка, Каста, Епіцентр, Пром) роялті залежить від категорії товару — перевір вручну по кожній категорії й постав фактичну ставку.</li>
+        <li><b>Налаштування</b> — службові витрати, спільні для каналів: еквайринг %, overhead %, бонус грн, доставка грн, маржа-орієнтир %.</li>
+      </ul>
+      <p><b>Формули</b> (маржа чиста, від ціни продажу):</p>
+      <ul>
+        <li>Змінна ставка каналу: <code>r = (Роялті + Еквайринг% + Overhead%)</code></li>
+        <li>Фікс. витрати: <code>F = Бонус + Доставка</code></li>
+        <li>Беззбиток: <code>Ціна = (Собівартість + F) ÷ (1 − r)</code></li>
+        <li>Під маржу m%: <code>Ціна = (Собівартість + F) ÷ (1 − r − m)</code></li>
+      </ul>
+      <p><b>Як читати:</b> «Беззбиток» (червоне) — нижче не можна, це в мінус. «Маржа 5%» — ціна, де лишається тонка маржа-орієнтир. У кожного каналу свої цифри, бо роялті різні. Поле «Перевірити ціну» додає колонку з маржею при цій ціні на кожному каналі.</p>
+      <div class="rule">⚠️ Беззбиток — це економічна підлога (де 0%). Хто й до якої ціни може опускатись (самостійно / через погодження) — за правилом процесу Exit, не за калькулятором.</div>
+    </div>
+  </details>
+
+  <div class="grid">
+    <!-- INPUTS -->
+    <div class="card anim" style="animation-delay:.05s">
+      <h2>Спільні дані</h2>
+      <div class="field">
+        <label>Собівартість + доставка <span class="hint">landed, грн</span></label>
+        <div class="inp"><input id="cost" type="number" value="280" min="0" step="1"><span class="unit">грн</span></div>
+      </div>
+
+      <details class="settings" id="settings">
+        <summary>Налаштування (службові витрати)</summary>
+        <div class="pad">
+          <div class="row2">
+            <div class="field" style="margin-bottom:10px"><label>Еквайринг</label><div class="inp"><input id="acq" type="number" value="1.5" step="0.1"><span class="unit">%</span></div></div>
+            <div class="field" style="margin-bottom:10px"><label>Overhead</label><div class="inp"><input id="oh" type="number" value="15" step="0.5"><span class="unit">%</span></div></div>
+          </div>
+          <div class="row2">
+            <div class="field" style="margin-bottom:10px"><label>Бонус</label><div class="inp"><input id="bonus" type="number" value="5" step="1"><span class="unit">грн</span></div></div>
+            <div class="field" style="margin-bottom:10px"><label>Доставка (сер.)</label><div class="inp"><input id="deliv" type="number" value="30" step="1"><span class="unit">грн</span></div></div>
+          </div>
+          <div class="field" style="margin-bottom:2px"><label>Маржа-орієнтир</label><div class="inp"><input id="penm" type="number" value="5" step="0.5"><span class="unit">%</span></div></div>
+        </div>
+      </details>
+
+      <div class="field" style="margin-top:16px">
+        <label>Перевірити ціну <span class="hint">маржа по каналах при цій ціні</span></label>
+        <div class="inp"><input id="checkprice" type="number" placeholder="напр. 600" min="0" step="10"><span class="unit">грн</span></div>
+      </div>
+      <div class="small">Введи ціну — у таблиці зʼявиться колонка з чистою маржею при ній на кожному каналі.</div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="card anim" style="animation-delay:.1s">
+      <h2>Ціни по каналах</h2>
+      <div id="warn"></div>
+      <table>
+        <thead><tr id="thead"></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="legendrow">
+        <span><i style="background:var(--red)"></i>Беззбиток (0%) — підлога</span>
+        <span><i style="background:var(--amber)"></i>Маржа-орієнтир (напр. 5%)</span>
+      </div>
+      <div class="small" style="margin-top:10px">Роялті й назви каналів редагуються прямо в таблиці. Беззбиток = (собівартість + бонус + доставка) ÷ (1 − роялті − еквайринг% − overhead%).</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    Маржа — чиста, від ціни продажу, після роялті каналу, еквайрингу, overhead, бонусу й доставки. Логіка витрат збігається з «Ціновою драбиною». Роялті по каналах редаговані — постав фактичні ставки зі своїх договорів. Бонус і доставка тут спільні для всіх каналів; якщо різняться — рахуй канал окремо.
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const num=id=>parseFloat($(id).value)||0;
+const fmt=n=>(isFinite(n)&&n>0)?Math.round(n).toLocaleString('uk-UA').replace(/,/g,' '):'—';
+const fmtP=n=>(Math.round(n*10)/10).toString().replace('.',',');
+
+let channels=[
+  {name:'Опенкарт', r:20},
+  {name:'Розетка',  r:20},
+  {name:'Каста',    r:20},
+  {name:'Епіцентр', r:20},
+  {name:'ОЛХ',      r:5},
+  {name:'Шафа',     r:5},
+  {name:'Пром',     r:15}
+];
+
+function compute(){
+  const cost=num('cost');
+  const acq=num('acq'), oh=num('oh'), penm=num('penm');
+  const fixed=num('bonus')+num('deliv');
+  const checkP=num('checkprice');
+  const hasCheck=checkP>0;
+
+  // header
+  $('thead').innerHTML = `<th>Канал</th><th>Роялті</th><th>Беззбиток</th><th>Маржа ${fmtP(penm)}%</th>`+(hasCheck?`<th>Маржа @ ${fmt(checkP)}</th>`:'');
+
+  const W=$('warn'); W.innerHTML='';
+  if(cost<=0){ $('rows').innerHTML=`<tr><td colspan="${hasCheck?5:4}" class="dash">Введи собівартість.</td></tr>`; return; }
+
+  let anyOver=false, rowsHtml='';
+  channels.forEach((c,i)=>{
+    const r=(c.r+acq+oh)/100;
+    let bez,pen,over=(r>=1);
+    if(over){ anyOver=true; bez=pen=Infinity; }
+    else{
+      bez=(cost+fixed)/(1-r);
+      const needP=1-r-penm/100;
+      pen=needP>0?(cost+fixed)/needP:Infinity;
+    }
+    let checkCell='';
+    if(hasCheck){
+      if(over){ checkCell=`<td class="dash">—</td>`; }
+      else{
+        const mg=(checkP*(1-r)-cost-fixed)/checkP*100;
+        const cls=mg<0?'neg':(mg<penm?'mid':'pos');
+        checkCell=`<td class="mg ${cls}">${fmtP(mg)}%</td>`;
+      }
+    }
+    rowsHtml+=`<tr>
+      <td><input class="ch-name" data-i="${i}" data-k="name" value="${c.name}"></td>
+      <td><span class="roy-inp"><input type="number" data-i="${i}" data-k="r" value="${c.r}" min="0" step="0.5"><span class="u">%</span></span></td>
+      <td class="floor">${over?'—':fmt(bez)}</td>
+      <td class="pen">${fmt(pen)}</td>
+      ${checkCell}
+    </tr>`;
+  });
+  $('rows').innerHTML=rowsHtml;
+
+  if(anyOver) W.innerHTML=`<div class="warn">У деяких каналів сума комісій (роялті + еквайринг + overhead) ≥ 100% — для них ціна не рахується. Перевір ставки.</div>`;
+
+  wireTable();
+}
+
+function wireTable(){
+  $('rows').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',e=>{
+    const i=+e.target.dataset.i, k=e.target.dataset.k;
+    channels[i][k] = k==='r' ? (parseFloat(e.target.value)||0) : e.target.value;
+    if(k==='r') compute(); // recompute prices; name change is cosmetic, recompute too for check col labels
+    else compute();
+  }));
+}
+
+['cost','acq','oh','bonus','deliv','penm','checkprice'].forEach(id=>$(id).addEventListener('input',compute));
+compute();
+</script>
+</body>
+</html>
