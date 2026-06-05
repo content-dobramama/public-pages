@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Калькулятор паритету комісій — Rozetka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e0f12; --panel:#16181d; --panel-2:#1c1f26; --line:#2a2e38;
+    --ink:#eef0f4; --muted:#8b909c; --faint:#5a5f6b;
+    --amber:#f5a524; --amber-dim:#9c6a17;
+    --green:#34d27b; --green-dim:#1c6b42; --red:#ff5d5d; --red-dim:#7a2b2b; --blue:#54a7ff;
+    --r:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased}
+  body{
+    background-image:radial-gradient(circle at 12% 0%,rgba(245,165,36,.07),transparent 40%),
+                     radial-gradient(circle at 90% 100%,rgba(84,167,255,.05),transparent 45%);
+    min-height:100vh;padding:28px 20px 60px;
+  }
+  .wrap{max-width:620px;margin:0 auto}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
+        border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:18px}
+  .title{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(22px,3.4vw,32px);letter-spacing:-.02em;line-height:1.03}
+  .title b{color:var(--amber)}
+  .sub{color:var(--muted);font-size:13px;margin-top:9px;max-width:60ch;line-height:1.5}
+  .sub code{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--amber);background:rgba(245,165,36,.1);padding:1px 6px;border-radius:5px}
+  .badge{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--amber);border:1px solid var(--amber-dim);border-radius:100px;padding:6px 12px;white-space:nowrap}
+
+  details.guide{margin-bottom:16px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}
+  details.guide summary{cursor:pointer;padding:14px 16px;font-family:'Archivo';font-weight:800;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--amber);list-style:none}
+  details.guide summary::-webkit-details-marker{display:none}
+  details.guide summary::before{content:"\25B8  "}
+  details.guide[open] summary::before{content:"\25BE  "}
+  .gbody{padding:2px 18px 18px;color:var(--muted);font-size:13px;line-height:1.6}
+  .gbody .gh{font-family:'Archivo';font-weight:800;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:14px 0 6px}
+  .gbody ul{margin:4px 0 10px;padding-left:18px}
+  .gbody li{margin:4px 0}
+  .gbody b{color:var(--ink)}
+  .gbody code{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--amber);background:rgba(245,165,36,.1);padding:1px 5px;border-radius:4px}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+  .card h2{font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .card h2::before{content:"";width:7px;height:7px;background:var(--amber);border-radius:2px;transform:rotate(45deg)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+  @media(max-width:540px){.grid{grid-template-columns:1fr}}
+  .f{display:flex;flex-direction:column;gap:6px}
+  .f.full{grid-column:1/-1}
+  label{font-size:12px;color:var(--muted);font-weight:500}
+  label .hint{color:var(--faint);font-size:11px;font-weight:400}
+  .inp{display:flex;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;overflow:hidden;transition:border-color .15s}
+  .inp:focus-within{border-color:var(--amber)}
+  .inp input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:500;padding:11px 12px;width:100%}
+  .inp .unit{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--faint);padding:0 13px;white-space:nowrap}
+
+  .stat.hero{background:linear-gradient(135deg,rgba(245,165,36,.16),rgba(245,165,36,.02));border:1px solid var(--amber-dim);border-radius:12px;padding:18px;margin-top:16px}
+  .stat.hero .k{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:9px;letter-spacing:.04em;text-transform:uppercase}
+  .stat.hero .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(40px,9vw,56px);line-height:1;letter-spacing:-.02em;color:var(--amber)}
+  .stat.hero .v small{font-size:.3em;color:var(--faint);font-weight:500}
+  .stat.hero .vs{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--faint);margin-top:8px}
+
+  .res3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+  @media(max-width:540px){.res3{grid-template-columns:1fr}}
+  .stat{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:13px 14px}
+  .stat .k{font-size:10.5px;color:var(--muted);font-weight:500;margin-bottom:7px;line-height:1.3;text-transform:uppercase;letter-spacing:.03em}
+  .stat .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:20px;line-height:1.05}
+  .stat .v.am{color:var(--amber)} .stat .v.gr{color:var(--green)}
+
+  .note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+  .note b{color:var(--ink);font-family:'JetBrains Mono',monospace;font-weight:500}
+  .warn{font-size:12.5px;color:var(--red);background:rgba(255,93,93,.08);border:1px solid var(--red-dim);border-radius:9px;padding:11px 13px;margin-top:14px;line-height:1.5}
+  footer{margin-top:20px;font-size:11px;color:var(--faint);text-align:center;line-height:1.6;font-family:'JetBrains Mono',monospace;letter-spacing:.03em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <div class="title">Скільки замовлень, щоб <b>обігнати</b></div>
+      <p class="sub">Rozetka зважує картку за сумою комісії за 14 днів: <code>ціна × комісія% × кількість</code>. Дешевша картка має продати більше, щоб дати ту саму комісію. Скільки <b style="color:#eef0f4">реальних</b> замовлень нам треба, щоб зрівнятись і обігнати конкурента.</p>
+    </div>
+    <div class="badge">Rozetka · комісія</div>
+  </div>
+
+  <details class="guide">
+    <summary>Як це працює — логіка й інструкція</summary>
+    <div class="gbody">
+      <div class="gh">Навіщо</div>
+      <ul>
+        <li>Алгоритм піднімає у видачі картку, що принесла маркетплейсу <b>більше комісії за 14 днів</b>. Комісія = ціна × ставка × кількість продажів.</li>
+        <li>Якщо ми дешевші за конкурента — кожне наше замовлення дає менше комісії, тож <b>одиниць треба більше</b>, щоб його наздогнати.</li>
+      </ul>
+      <div class="gh">Логіка розрахунку</div>
+      <ul>
+        <li>Комісія конкурента за 14 днів = <code>ціна_конкурента × ставка% × його_продажі</code>.</li>
+        <li>Наша комісія за 1 замовлення = <code>наша_ціна × ставка%</code>.</li>
+        <li>Щоб зрівнятись = комісія конкурента ÷ наша комісія за замовлення (ставка% скорочується, якщо категорія та сама).</li>
+        <li>Щоб обігнати = + запас 20–30%.</li>
+      </ul>
+      <div class="gh">Як користуватись</div>
+      <ul>
+        <li>Це <b>ціль для реальних продажів</b> за 14 днів — під неї працюють ціна (демпінг/penetration), реклама, контент, відгуки.</li>
+        <li>Темп/день показує, скільки замовлень на добу треба тримати.</li>
+        <li>Якщо реальним попитом цю кількість <b>не добити</b> — це ранній сигнал, що ціна/товар не втримають позицію. Тоді Fix або Exit, а не вливати бюджет.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="card">
+    <h2>Дані</h2>
+    <div class="grid">
+      <div class="f">
+        <label>Ціна конкурента <span class="hint">грн</span></label>
+        <div class="inp"><input id="cp" type="number" inputmode="decimal" value="999" min="1" step="1"><span class="unit">грн</span></div>
+      </div>
+      <div class="f">
+        <label>Продажі конкурента / 14 днів <span class="hint">шт</span></label>
+        <div class="inp"><input id="cu" type="number" inputmode="decimal" value="50" min="0" step="1"><span class="unit">шт</span></div>
+      </div>
+      <div class="f">
+        <label>Наша ціна <span class="hint">грн</span></label>
+        <div class="inp"><input id="op" type="number" inputmode="decimal" value="499" min="1" step="1"><span class="unit">грн</span></div>
+      </div>
+      <div class="f">
+        <label>Комісія категорії <span class="hint">однакова для обох</span></label>
+        <div class="inp"><input id="rate" type="number" inputmode="decimal" value="20" min="0" max="60" step="0.5"><span class="unit">%</span></div>
+      </div>
+      <div class="f full">
+        <label>Запас на обгін <span class="hint">наскільки перевищити конкурента</span></label>
+        <div class="inp"><input id="ov" type="number" inputmode="decimal" value="25" min="0" max="100" step="1"><span class="unit">%</span></div>
+      </div>
+    </div>
+
+    <div id="warn"></div>
+
+    <div class="stat hero">
+      <div class="k">Реальних замовлень за 14 днів, щоб обігнати (+<span id="ovShow">25</span>%)</div>
+      <div class="v"><span id="beat">—</span> <small>шт</small></div>
+      <div class="vs" id="pace">—</div>
+    </div>
+
+    <div class="res3">
+      <div class="stat"><div class="k">Щоб зрівнятись</div><div class="v am" id="match">—</div></div>
+      <div class="stat"><div class="k">Комісія конкурента / 14дн</div><div class="v" id="ccomm">—</div></div>
+      <div class="stat"><div class="k">Наша комісія / замовлення</div><div class="v" id="ocomm">—</div></div>
+    </div>
+
+    <p class="note" id="ratioNote">—</p>
+  </div>
+
+  <footer>Воронка 2.0 &middot; ціль реальних продажів, не самовикупів</footer>
+</div>
+
+<script>
+  const $=id=>document.getElementById(id);
+  const num=id=>{const v=parseFloat($(id).value);return isNaN(v)?0:v;};
+  const fmt=n=>isFinite(n)?Math.round(n).toLocaleString('uk-UA'):'—';
+  const fmt1=n=>(Math.round(n*10)/10).toString().replace('.',',');
+
+  function recalc(){
+    const cp=num('cp'), cu=num('cu'), op=num('op'), rate=num('rate')/100, ov=num('ov');
+    $('ovShow').textContent=fmt1(ov);
+    const W=$('warn');
+
+    if(cp<=0||op<=0||cu<=0){
+      W.innerHTML='';
+      ['beat','match','ccomm','ocomm'].forEach(id=>$(id).textContent='—');
+      $('pace').textContent='—'; $('ratioNote').textContent='Введи ціни та продажі конкурента.';
+      return;
+    }
+    W.innerHTML='';
+
+    const compComm14 = cp*rate*cu;        // комісія конкурента за 14 днів
+    const ourCommPer = op*rate;           // наша комісія за 1 замовлення
+    const matchUnits = Math.ceil(compComm14 / ourCommPer);   // = ceil(cp*cu/op)
+    const beatUnits  = Math.ceil(matchUnits * (1+ov/100));
+    const perDay     = Math.ceil(beatUnits/14);
+    const ratio      = cp/op;
+
+    $('beat').textContent  = fmt(beatUnits);
+    $('pace').textContent  = `\u2248 ${fmt(perDay)} замовл./день протягом 14 днів`;
+    $('match').textContent = fmt(matchUnits)+' шт';
+    $('ccomm').textContent = fmt(compComm14)+' грн';
+    $('ocomm').textContent = fmt(ourCommPer)+' грн';
+
+    let rtxt;
+    if(ratio>=1.05) rtxt=`Наша ціна у <b>${fmt1(ratio)}\u00d7</b> нижча за конкурента — тож і одиниць треба приблизно у стільки ж разів більше, щоб дати ту саму комісію.`;
+    else if(ratio<=0.95) rtxt=`Наша ціна <b>вища</b> за конкурента — кожне замовлення дає більше комісії, тож достатньо менше одиниць.`;
+    else rtxt=`Ціни майже рівні — кількість приблизно як у конкурента + запас на обгін.`;
+    $('ratioNote').innerHTML = rtxt + ` Конкурент: ${fmt(cu)} шт/14дн.`;
+  }
+
+  ['cp','cu','op','rate','ov'].forEach(id=>$(id).addEventListener('input',recalc));
+  recalc();
+</script>
+</body>
+</html>
