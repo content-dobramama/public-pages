@@ -80,8 +80,21 @@ const WHEN = {"gng": "Перед грошима: чиста маржа при Р
 function resize(f){
   try{
     const d = f.contentWindow.document;
+    if(!d || !d.documentElement) return;
+    // Кожен калькулятор має body{min-height:100vh}. Усередині iframe 100vh —
+    // це висота самого iframe, тож будь-яка виставлена нами висота "розтягує"
+    // body назад до неї, ResizeObserver це ловить і висота росте нескінченно.
+    // Прибираємо min-height один раз — і scrollHeight стає реальним.
+    if(!d.getElementById('__hubFix')){
+      const s = d.createElement('style');
+      s.id = '__hubFix';
+      s.textContent = 'html,body{min-height:0!important}';
+      (d.head || d.documentElement).appendChild(s);
+    }
     const h = Math.max(d.documentElement.scrollHeight, d.body ? d.body.scrollHeight : 0);
-    if(h > 0) f.style.height = (h + 24) + 'px';
+    const cur = parseInt(f.style.height) || 0;
+    // Присвоюємо лише за реальної зміни (>1px) — розриває цикл зворотного зв'язку.
+    if(h > 0 && Math.abs(cur - (h + 24)) > 1) f.style.height = (h + 24) + 'px';
   }catch(e){}
 }
 
@@ -95,7 +108,12 @@ function showTab(key){
       f.addEventListener('load', ()=>{
         resize(f);
         try{
-          const ro = new ResizeObserver(()=>resize(f));
+          let scheduled = false;
+          const ro = new ResizeObserver(()=>{
+            if(scheduled) return;
+            scheduled = true;
+            requestAnimationFrame(()=>{ scheduled = false; resize(f); });
+          });
           ro.observe(f.contentWindow.document.body);
         }catch(e){}
         [120,400,900].forEach(t=>setTimeout(()=>resize(f), t));
