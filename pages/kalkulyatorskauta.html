@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Калькулятор скаута · Dobramama</title>
+<style>
+:root{
+  color-scheme: light;
+  --surface:#fcfcfb; --plane:#f9f9f7;
+  --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,0.10);
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b;
+  --accent:#2a78d6; --soft:#cde2fb;
+  --good-bg:#e8f6e8; --warn-bg:#fdf3dd; --crit-bg:#fae9e9;
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --surface:#1a1a19; --plane:#0d0d0d; --ink:#fff; --ink2:#c3c2b7;
+  --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,0.10);
+  --accent:#3987e5; --soft:#184f95;
+  --good-bg:#122a12; --warn-bg:#332a10; --crit-bg:#2e1616;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --surface:#1a1a19; --plane:#0d0d0d; --ink:#fff; --ink2:#c3c2b7;
+    --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,0.10);
+    --accent:#3987e5; --soft:#184f95;
+    --good-bg:#122a12; --warn-bg:#332a10; --crit-bg:#2e1616;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:820px;margin:0 auto;padding:20px 16px 70px}
+header{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:20px;margin:0 0 3px;letter-spacing:-0.01em}
+.sub{color:var(--ink2);font-size:13.5px;margin:0;max-width:62ch}
+.hb{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap}
+button{font:inherit;font-size:13px;cursor:pointer;border-radius:8px;border:1px solid var(--ring);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--axis)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.08)}
+
+.step{background:var(--surface);border:1px solid var(--ring);border-radius:11px;margin-bottom:12px;overflow:hidden}
+.step > summary{list-style:none;cursor:pointer;padding:13px 16px;display:flex;align-items:center;gap:11px;font-weight:600;font-size:14.5px}
+.step > summary::-webkit-details-marker{display:none}
+.step > summary::after{content:'▾';margin-left:auto;color:var(--muted);font-size:13px;transition:transform .15s}
+.step[open] > summary::after{transform:rotate(180deg)}
+.step > summary .num{width:23px;height:23px;border-radius:6px;background:var(--soft);color:var(--accent);display:grid;place-items:center;font-size:12.5px;flex:none}
+:root[data-theme="dark"] .step > summary .num{color:#cde2fb}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .step > summary .num{color:#cde2fb}}
+.step > summary .tail{margin-left:auto;font-size:12.5px;font-weight:500;color:var(--ink2);font-variant-numeric:tabular-nums;padding-right:9px}
+.step > summary .role{font-size:10px;font-weight:600;background:var(--plane);border:1px solid var(--grid);border-radius:4px;padding:2px 6px;letter-spacing:.03em;color:var(--muted);text-transform:uppercase}
+.step > summary .role + .tail{margin-left:9px}
+.body{padding:0 16px 15px}
+
+.row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:6px 0}
+.row + .row{border-top:1px solid var(--grid)}
+.row label{font-size:13.5px;color:var(--ink2)}
+.row label b{color:var(--ink);font-weight:600}
+.row .h{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+input,select{font:inherit;font-size:14px;padding:6px 9px;border-radius:7px;border:1px solid var(--axis);background:var(--plane);color:var(--ink)}
+input[type=number]{width:98px;text-align:right;font-variant-numeric:tabular-nums}
+input[type=text]{width:160px}
+select{width:130px}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.i3{display:flex;gap:5px}
+.i3 input{width:72px}
+.i3 input::placeholder{color:var(--muted);opacity:.7;font-size:12px}
+@media(max-width:430px){.i3 input{width:60px}input[type=number]{width:88px}input[type=text]{width:130px}}
+.inl{display:flex;align-items:center;gap:6px}
+.u{color:var(--muted);font-size:12.5px;min-width:32px;display:inline-block}
+
+.tabs{display:flex;gap:4px;background:var(--plane);padding:3px;border-radius:8px;margin:13px 0 4px;border:1px solid var(--grid)}
+.tabs button{flex:1;border:none;background:transparent;padding:7px;font-size:12.5px;border-radius:6px}
+.tabs button[aria-selected=true]{background:var(--surface);border:1px solid var(--ring);font-weight:600}
+.out{background:var(--plane);border:1px solid var(--grid);border-radius:9px;padding:11px 13px;margin-top:12px;font-size:13.5px;line-height:1.55}
+.out b{font-variant-numeric:tabular-nums}
+.out .t{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-bottom:6px}
+.o-good{background:var(--good-bg);border-color:var(--good)}
+.o-warn{background:var(--warn-bg);border-color:var(--warn)}
+.o-crit{background:var(--crit-bg);border-color:var(--crit)}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:11px}
+th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;text-align:right;padding:0 0 6px}
+th:first-child{text-align:left}
+td{padding:7px 0;border-top:1px solid var(--grid);text-align:right;font-variant-numeric:tabular-nums}
+td:first-child{text-align:left;font-variant-numeric:normal}
+tr[data-pick]{cursor:pointer}
+tr.sel td{background:var(--soft);font-weight:600}
+:root[data-theme="dark"] tr.sel td{background:#12304f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) tr.sel td{background:#12304f}}
+tr.sel td:first-child{border-radius:6px 0 0 6px;padding-left:7px}
+tr.sel td:last-child{border-radius:0 6px 6px 0;padding-right:7px}
+
+.verdict{border-radius:12px;padding:17px 19px;border:1.5px solid var(--ring);margin:20px 0 12px}
+.verdict .l{font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;opacity:.85}
+.verdict .big{font-size:31px;font-weight:700;letter-spacing:-0.02em;margin:4px 0 3px;display:flex;align-items:baseline;gap:11px;flex-wrap:wrap}
+.verdict .big .p{font-size:36px;font-variant-numeric:tabular-nums}
+.verdict .w{font-size:13.5px;line-height:1.5;color:var(--ink2);margin-top:5px}
+.v-good{background:var(--good-bg);border-color:var(--good)} .v-good .l,.v-good .big{color:var(--good)}
+.v-warn{background:var(--warn-bg);border-color:var(--warn)} .v-warn .l,.v-warn .big{color:#8a6100}
+:root[data-theme="dark"] .v-warn .l,:root[data-theme="dark"] .v-warn .big{color:var(--warn)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .v-warn .l,:root:not([data-theme="light"]) .v-warn .big{color:var(--warn)}}
+.v-crit{background:var(--crit-bg);border-color:var(--crit)} .v-crit .l,.v-crit .big{color:var(--crit)}
+.v-none{background:var(--plane);border-style:dashed} .v-none .l,.v-none .big{color:var(--muted)}
+
+.chk{display:flex;gap:8px;align-items:flex-start;padding:8px 0;font-size:13.5px;line-height:1.45;border-top:1px solid var(--grid)}
+.chk:first-child{border-top:none}
+.chk .ic{flex:none;font-size:13px;width:17px}
+.chk .tx b{font-variant-numeric:tabular-nums}
+.chk .no{color:var(--muted)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:11px}
+.kpi{background:var(--plane);border:1px solid var(--grid);border-radius:9px;padding:9px 11px}
+.kpi .k{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;line-height:1.3;min-height:24px}
+.kpi .v{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px;white-space:nowrap}
+.kpi .s{font-size:11px;color:var(--muted);margin-top:1px}
+.kpi.hl{background:var(--soft);border-color:var(--accent)}
+:root[data-theme="dark"] .kpi.hl{background:#12304f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .kpi.hl{background:#12304f}}
+
+.note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:9px}
+a{color:var(--accent)}
+.foot{margin-top:22px;padding-top:13px;border-top:1px solid var(--grid);font-size:12px;color:var(--muted);line-height:1.6}
+.fld{display:inline-block;font-size:11px;background:var(--surface);border:1px solid var(--grid);border-radius:4px;padding:1px 5px;color:var(--ink2);white-space:nowrap}
+#phead{display:none}
+#tip{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99;
+  background:var(--ink);color:var(--surface);padding:11px 16px;border-radius:10px;
+  font-size:13.5px;line-height:1.45;max-width:min(420px,92vw);box-shadow:0 6px 24px rgba(0,0,0,.22);
+  opacity:0;pointer-events:none;transition:opacity .2s}
+#tip.on{opacity:1}
+#tip b{color:#fff}
+:root[data-theme="dark"] #tip{background:#e8e8e4;color:#111}
+:root[data-theme="dark"] #tip b{color:#000}
+@media print{
+  @page{size:A4;margin:11mm}
+  html,body{background:#fff!important;color:#000!important;font-size:11.5px}
+  header,.hb,.tabs,#todo,#tip,#frameNote,.foot,#s0,#rowName{display:none!important}
+  #phead{display:block!important;border-bottom:2px solid #000;padding-bottom:7px;margin-bottom:11px}
+  #phead .n{font-size:17px;font-weight:700;letter-spacing:-0.01em}
+  #phead .m{font-size:10.5px;color:#444;margin-top:3px}
+  .wrap{max-width:none;padding:0}
+  .step{break-inside:avoid;border:1px solid #bbb;box-shadow:none;margin-bottom:7px;background:#fff!important}
+  .step > summary{padding:7px 10px;font-size:12.5px;border-bottom:1px solid #eee}
+  .step > summary::after{display:none}
+  .step:not([open]) .body{display:block!important}
+  .body{padding:0 10px 9px}
+  .row{padding:2.5px 0}
+  .row .h{display:none}
+  .out{break-inside:avoid;padding:7px 9px;margin-top:7px;background:#fafafa!important;border-color:#bbb!important}
+  .verdict{break-inside:avoid;padding:11px 13px;margin:11px 0 9px;border-width:2px!important;background:#fff!important}
+  .verdict .big{font-size:23px}.verdict .big .p{font-size:26px}
+  .kpi{background:#fff!important;border-color:#bbb!important}
+  .kpi .v{font-size:16px}
+  input,select{border-color:#ccc!important;background:#fff!important;color:#000!important;padding:2px 6px}
+  tr.sel td{background:#eee!important}
+  .fld{background:#fff!important;border-color:#bbb!important}
+  a[href^="http"]::after{content:" (" attr(href) ")";font-size:9px;color:#555}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>🔎 Калькулятор скаута</h1>
+    <p class="sub">Три кроки — від ринку до вердикту. Кожен одразу показує свій висновок, а мітки <span class="fld">→ ⚙️ поле</span> підказують, куди вписати цифру в картку. Бюджет входу тут не рахується: його веде логіст перед оплатою партії.</p>
+  </div>
+  <div class="hb">
+    <button id="demoA">Приклад 🟢</button>
+    <button id="demoB">Приклад 🔴</button>
+    <button class="primary" id="print">⬇ Зберегти PDF</button>
+    <button id="reset">Очистити</button>
+    <button id="theme">◐</button>
+  </div>
+</header>
+
+<div id="phead"></div>
+<div id="frameNote"></div>
+<div id="tip"></div>
+<div id="todo"></div>
+
+<!-- СТАВКИ -->
+<details class="step" id="s0">
+  <summary><span class="num">⚙</span> Ставки й курс <span class="tail" id="t0"></span></summary>
+  <div class="body">
+    <div class="row"><label><b>Комісія Розетки</b><span class="h">Категорійна. Розкид 13–22% — це 9 п.п. рентабельності</span></label><div class="inl"><input type="number" id="K" step="0.1" value="18"><span class="u">%</span></div></div>
+    <div class="row"><label>Еквайринг</label><div class="inl"><input type="number" id="E" step="0.1" value="1.5"><span class="u">%</span></div></div>
+    <div class="row"><label>Overhead</label><div class="inl"><input type="number" id="OH" step="0.1" value="12"><span class="u">%</span></div></div>
+    <div class="row"><label>Бонус</label><div class="inl"><input type="number" id="B" step="1" value="5"><span class="u">грн</span></div></div>
+    <div class="row"><label>Доставка по Україні</label><div class="inl"><input type="number" id="D" step="1" value="30"><span class="u">грн</span></div></div>
+    <div class="row"><label><b>Курс $</b><span class="h">Записати в картку разом із датою</span></label><div class="inl"><input type="number" id="FX" step="0.01" value="45"><span class="u">грн</span></div></div>
+    <div class="row"><label><b>Сума закупівлі, $</b><span class="h">Орієнтовна вартість партії. Від неї залежить курс юаня</span></label><div class="inl"><input type="number" id="sumUsd" step="100" value="3000"><span class="u">$</span></div></div>
+    <div class="row"><label><b>Курс юань → $</b><span class="h" id="cnyHint">Підбирається за сумою · можна перебити вручну</span></label><div class="inl"><input type="number" id="CNY" step="0.01" value="6.56"><span class="u">¥/$</span></div></div>
+    <div class="row"><label>Дата курсу<span class="h">Курс змінюється — фіксуємо дату разом із числом</span></label><input type="text" id="CNYdate" placeholder="21.07.2026"></div>
+    <div class="out" style="margin-top:10px">
+      <div class="t">Курс юаня — звідки брати</div>
+      Блок <strong>«Перекази в Китай»</strong> на <a href="https://turboavia.com/turbo/client" target="_blank" rel="noopener">turboavia.com/turbo/client</a>. Курс залежить від суми переказу — беремо рядок, у який потрапляє вартість вашої партії.
+      <pre style="margin:8px 0 0;background:var(--surface);border:1px solid var(--grid);border-radius:6px;padding:8px 10px;font-size:12px;line-height:1.5" id="rateTable"></pre>
+      <span class="note" style="display:block;margin-top:6px">Це курс переказу, а не біржовий. Різниця з біржовим (~7,2) з'їдає близько 10% собівартості — саме тому рахуємо по ньому.</span>
+    </div>
+    <div class="row" style="margin-top:10px"><label>Категорія · дата звірки комісії</label><input type="text" id="CAT" placeholder="Рюкзаки · 28.07"></div>
+  </div>
+</details>
+
+<!-- 1. РИНОК -->
+<details class="step" open>
+  <summary><span class="num">1</span> Ринок і ціна <span class="tail" id="t1"></span></summary>
+  <div class="body">
+    <div class="row" id="rowName"><label><b>Товар</b><span class="h">Робоча назва — піде в назву PDF і в шапку документа</span></label><input type="text" id="NAME" placeholder="напр. Пемза електрична"></div>
+    <div class="row"><label><b>Наша РРЦ</b><span class="h">Одна ціна, у яку заходимо — з урахуванням видачі й конкурентів</span></label><div class="inl"><input type="number" id="pRRC" step="1"><span class="u">грн</span></div></div>
+    <div class="row"><label><b>Ціна еталона</b><span class="h">Конкурент, проти якого міряємо D30. Не наш власний SKU</span></label><div class="inl"><input type="number" id="pEt" step="1"><span class="u">грн</span></div></div>
+    <div class="row"><label><b>Продажі еталона</b><span class="h">За Інсайдером, знімок за 12 місяців. Це і є ціль шт/міс</span></label><div class="inl"><input type="number" id="goal" step="1"><span class="u">шт/міс</span></div></div>
+    <div id="o1"></div>
+  </div>
+</details>
+
+<!-- 2. СОБІВАРТІСТЬ -->
+<details class="step" open>
+  <summary><span class="num">2</span> Собівартість <span class="tail" id="t2"></span></summary>
+  <div class="body">
+    <div class="row"><label><b>Ціна 1 шт у виробника</b><span class="h">Вводьте в будь-якому — друге перерахується само</span></label>
+      <div class="i3"><input type="number" id="cny" step="0.01" placeholder="юань"><input type="number" id="usd" step="0.01" placeholder="$"></div></div>
+    <div class="row"><label>У коробці</label><div class="inl"><input type="number" id="boxQty" step="1" value="1"><span class="u">шт</span></div></div>
+
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-dm="tariff">Порахувати з тарифів</button>
+      <button role="tab" aria-selected="false" data-dm="direct">Доставка $/шт відома</button>
+    </div>
+
+    <div id="pane-tariff">
+      <div class="row"><label>Коробка Д×Ш×В<span class="h">сантиметри</span></label><div class="i3"><input type="number" id="bL" step="0.1" placeholder="Д"><input type="number" id="bW" step="0.1" placeholder="Ш"><input type="number" id="bH" step="0.1" placeholder="В"></div></div>
+      <div class="row"><label>Вага коробки</label><div class="inl"><input type="number" id="bKg" step="0.1"><span class="u">кг</span></div></div>
+      <div class="row"><label>Тариф Море<span class="h">$/кг і $/м³ — перевізник бере більше з двох</span></label><div class="i3"><input type="number" id="seaKg" step="0.01" value="2.2" placeholder="$/кг"><input type="number" id="seaM3" step="1" value="445" placeholder="$/м³"></div></div>
+      <div class="row"><label>Тариф ЖД</label><div class="i3"><input type="number" id="rlKg" step="0.01" value="6" placeholder="$/кг"><input type="number" id="rlM3" step="1" value="1200" placeholder="$/м³"></div></div>
+      <div class="row"><label>Тариф Авіа</label><div class="i3"><input type="number" id="airKg" step="0.01" value="13" placeholder="$/кг"><input type="number" id="airM3" step="1" value="2600" placeholder="$/м³"></div></div>
+    </div>
+
+    <div id="pane-direct" hidden>
+      <div class="row"><label>Доставка 1 шт — Море<span class="h">Як рахує логіст: вартість партії ÷ кількість</span></label><div class="inl"><input type="number" id="dSea" step="0.01"><span class="u">$</span></div></div>
+      <div class="row"><label>Доставка 1 шт — ЖД</label><div class="inl"><input type="number" id="dRail" step="0.01"><span class="u">$</span></div></div>
+      <div class="row"><label>Доставка 1 шт — Авіа</label><div class="inl"><input type="number" id="dAir" step="0.01"><span class="u">$</span></div></div>
+      <div class="row"><label>Вага 1 шт<span class="h">Потрібна лише для авіа-тригера «до 1 кг»</span></label><div class="inl"><input type="number" id="unitKgMan" step="0.01"><span class="u">кг</span></div></div>
+    </div>
+
+    <table id="ship"><thead><tr><th>Спосіб</th><th>достав. 1 шт</th><th>собівар. $</th><th>собівар. грн</th><th>рент.</th></tr></thead><tbody></tbody></table>
+    <p class="note" id="dens">Клікніть рядок, щоб зробити спосіб базовим — він піде в поле ⚙️ «Тип Доставки».</p>
+  </div>
+</details>
+
+<!-- 3. СЕЗОН -->
+<details class="step" open>
+  <summary><span class="num">3</span> Сезон і дедлайн замовлення <span class="tail" id="t3"></span></summary>
+  <div class="body">
+    <div class="row"><label><b>Старт сезону</b><span class="h">Місяць, коли починається попит</span></label>
+      <select id="seaStart"><option value="">—</option><option value="all">Всесезон</option></select></div>
+    <div class="row"><label>Строк виробництва<span class="h">Від оплати до відвантаження</span></label><div class="inl"><input type="number" id="prod" step="1" value="15"><span class="u">дн</span></div></div>
+    <div id="o3"></div>
+  </div>
+</details>
+
+<!-- ВЕРДИКТ -->
+<div class="verdict v-none" id="verdict">
+  <div class="l">Вердикт на РРЦ</div>
+  <div class="big"><span id="vT">—</span><span class="p" id="vP"></span></div>
+  <div class="w" id="vW">Заповніть РРЦ і собівартість.</div>
+</div>
+
+<details class="step" open>
+  <summary><span class="num">✓</span> Перевірки <span class="tail" id="tc"></span></summary>
+  <div class="body"><div id="checks"></div>
+    <div class="kpis" id="floors"></div>
+    <p class="note">Цінові межі рахуються з собівартості — вводити не треба. Підлога 15% потрібна для гейта цінової ніші.</p>
+  </div>
+</details>
+
+<p class="foot">
+Модель витрат: комісія + еквайринг + overhead — змінні, бонус + доставка — фікс. Рахунок лише на чистих продажах, самовикупи не є продажем.<br>
+Формула звірена на реальних картках: Ваги 499/167 → 28,0% · Пемза 999/373 → 27,7% · Сушка 599/285 → 15,0% · Палатки 995/426 → 27,1% при комісії 13% · Рюкзак 1169/345 → 32,0% і 999/345 → 26,46% при комісії 22%.
+</p>
+
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const n=id=>{const v=parseFloat($(id).value);return isFinite(v)?v:0};
+const has=id=>$(id).value!==''&&isFinite(parseFloat($(id).value));
+const f=(x,d=0)=>isFinite(x)?x.toLocaleString('uk-UA',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+const MON=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+MON.forEach((m,i)=>$('seaStart').insertAdjacentHTML('beforeend',`<option value="${i}">${m}</option>`));
+let picked='sea';
+
+const VR=()=>(n('K')+n('E')+n('OH'))/100;
+const prof=(P,C)=>P-C-P*VR()-n('B')-n('D');
+const rent=(P,C)=>P>0?prof(P,C)/P*100:NaN;
+const floorAt=(C,R)=>{const d=1-VR()-R;return d>0.02?(C+n('B')+n('D'))/d:NaN};
+
+/* Курси переказу в Китай — turboavia.com/turbo/client, блок «Перекази в Китай», знімок 21.07.2026.
+   Курс залежить від суми переказу: що більша сума, то більше юанів за долар. */
+const RATES=[[20000,6.64],[15000,6.62],[10000,6.60],[5000,6.58],[3000,6.56],[2000,6.56],[1000,6.56]];
+const rateFor=s=>{for(const [min,r] of RATES) if(s>=min) return {min,r}; return {min:0,r:6.56}};
+let rateManual=false;
+
+let dmode='tariff';
+function ship(){
+  const vol=n('bL')*n('bW')*n('bH')/1e6, kg=n('bKg'), q=Math.max(1,n('boxQty'));
+  const usd=n('usd');
+  const M=[['sea','Море',100,n('seaKg'),n('seaM3'),'dSea'],['rail','ЖД',70,n('rlKg'),n('rlM3'),'dRail'],['air','Авіа',30,n('airKg'),n('airM3'),'dAir']]
+    .map(([key,name,days,kr,mr,fid])=>{
+      const per=dmode==='direct'?n(fid):Math.max(kg*kr,vol*mr)/q;
+      return {key,name,days,per,heavy:kg*kr>=vol*mr,costUsd:usd+per,uah:(usd+per)*n('FX')};
+    });
+  const unitKg=dmode==='direct'?n('unitKgMan'):(q>0?kg/q:0);
+  return {vol,dens:vol>0?kg/vol:0,usd,unitKg,M};
+}
+const cost=()=>{const s=ship();return (s.M.find(x=>x.key===picked)||s.M[0]).uah};
+const stOf=r=>!isFinite(r)?{c:'none',col:'var(--muted)',ic:'',t:'—'}
+  :r>=20?{c:'good',col:'var(--good)',ic:'🟢',t:'Go'}
+  :r>=15?{c:'warn',col:'var(--warn)',ic:'🟡',t:'Go з умовами'}
+  :r>=0 ?{c:'crit',col:'var(--serious)',ic:'🔴',t:'No-Go'}
+  :      {c:'crit',col:'var(--crit)',ic:'🔴',t:'No-Go, збиток'};
+const kpi=(k,v,s,c='')=>`<div class="kpi ${c}"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+const chk=(ok,tx)=>`<div class="chk"><span class="ic">${ok===null?'<span class="no">·</span>':ok?'✅':'⛔'}</span><span class="tx ${ok===null?'no':''}">${tx}</span></div>`;
+const plural=k=>{const a=k%10,b=k%100;return (a===1&&b!==11)?'проблема':(a>=2&&a<=4&&(b<12||b>14))?'проблеми':'проблем'};
+
+function render(){
+  const C=cost(), P=n('pRRC'), Et=n('pEt'), G=n('goal');
+  const r=rent(P,C), st=stOf(r), ready=P>0&&C>0;
+  const f20=floorAt(C,.20), f15=floorAt(C,.15), f0=floorAt(C,0);
+  const s=ship();
+
+  /* курс юаня за сумою переказу */
+  const rt=rateFor(n('sumUsd'));
+  if(!rateManual && Math.abs(n('CNY')-rt.r)>0.001) $('CNY').value=rt.r;
+  $('cnyHint').innerHTML=rateManual
+    ?`Введено вручну. За сумою ${f(n('sumUsd'))} $ таблиця дає <b>${f(rt.r,2)}</b>`
+    :`Рядок «${f(rt.min)}+» за сумою ${f(n('sumUsd'))} $ → <b>${f(rt.r,2)} ¥/$</b>`;
+  $('rateTable').textContent=RATES.map(([m,r])=>
+    `${(f(m)+'+').padStart(7)} $   ${f(r,2)} ¥/$${m===rt.min&&!rateManual?'   ← ваша сума':''}`).join('\n');
+
+  $('t0').textContent=`комісія ${f(n('K'),1)}% · $ ${f(n('FX'),2)} · ¥ ${f(n('CNY'),2)}`;
+
+  /* шапка для друку / PDF */
+  $('phead').innerHTML=`<div class="n">🔎 Скаут: ${$('NAME').value||'SKU без назви'}</div>
+    <div class="m">${$('CAT').value?$('CAT').value+' · ':''}комісія ${f(n('K'),1)}% · еквайринг ${f(n('E'),1)}% · overhead ${f(n('OH'),1)}% · бонус ${f(n('B'))} грн · доставка ${f(n('D'))} грн
+    <br>курс $ ${f(n('FX'),2)} грн · курс ¥ ${f(n('CNY'),2)} (turboavia${$('CNYdate').value?', '+$('CNYdate').value:''}) · розрахунок ${new Date().toLocaleDateString('uk-UA')}</div>`;
+
+  /* чого ще бракує */
+  const need=[];
+  if(!has('pRRC'))need.push('РРЦ');
+  if(!has('pEt'))need.push('ціна еталона');
+  if(!has('goal'))need.push('продажі еталона');
+  if(!has('cny')&&!has('usd'))need.push('ціна у виробника');
+  if(dmode==='tariff'){ if(!has('bL')||!has('bW')||!has('bH')||!has('bKg'))need.push('габарити й вага коробки'); }
+  else if(!has('dSea')&&!has('dRail')&&!has('dAir'))need.push('доставка $/шт');
+  if($('seaStart').value==='')need.push('сезон');
+  if(!$('CAT').value)need.push('категорія й комісія');
+  $('todo').innerHTML=need.length
+    ?`<div class="out o-warn" style="margin:0 0 12px"><div class="t">Ще не заповнено — ${need.length}</div>${need.join(' · ')}</div>`
+    :`<div class="out o-good" style="margin:0 0 12px">✓ Усі поля заповнені — вердикт нижче повний</div>`;
+
+  /* 1 · ринок */
+  const pos=Et>0&&P>0?P/Et*100:NaN;
+  $('t1').textContent=P>0?`РРЦ ${f(P)} грн`+(isFinite(pos)?` · ${f(pos)}% еталона`:''):'';
+  $('o1').innerHTML=!(P>0&&Et>0)?'':
+    `<div class="out ${pos>120?'o-crit':pos>105?'o-warn':'o-good'}"><div class="t">Позиція проти еталона</div>
+     Наша РРЦ <b>${f(pos)}%</b> від ціни еталона (${f(P)} проти ${f(Et)} грн).
+     ${pos>120?' <b>Понад 120% — потрібна доведена перевага з Блоку 2, інакше знижуємо РРЦ.</b> Реальні провали: 1079 проти 619 · 599 проти 299.'
+       :pos>105?' Дорожче за ринок — потрібен рядок переваги з Блоку 2.':' У межах ринку.'}
+     ${G>0?`<br>Ціль <b>${f(G)} шт/міс</b>${G<50?' — <b>нижче порога 50 шт/міс: ніша не окупить вартість запуску.</b>':' — ніша достатня.'} <span class="fld">→ ⚙️ Ціль, шт/міс</span>`:''}
+     ${P>0?`<br>РРЦ <b>${f(P)} грн</b> <span class="fld">→ ⚙️ Ціна РРЦ, грн</span>`:''}</div>`;
+
+  /* 2 · собівартість */
+  const tb=$('ship').querySelector('tbody');
+  tb.innerHTML=s.M.map(m=>{const rr=rent(P,m.uah),s2=stOf(rr);
+    return `<tr data-pick="${m.key}" class="${m.key===picked?'sel':''}"><td><b>${m.name}</b> <span style="color:var(--muted);font-size:12px">~${m.days} дн${dmode==='tariff'&&s.vol>0?' · '+(m.heavy?'ваговий':"об'ємний"):''}</span></td>
+    <td>${f(m.per,2)} $</td><td>${f(m.costUsd,2)} $</td><td><b>${f(m.uah)} грн</b></td>
+    <td style="color:${s2.col};font-weight:600">${isFinite(rr)?f(rr,1)+'%':'—'}</td></tr>`}).join('');
+  tb.querySelectorAll('tr[data-pick]').forEach(t=>t.onclick=()=>{picked=t.dataset.pick;render()});
+  const cu=(s.M.find(x=>x.key===picked)||s.M[0]).costUsd;
+  $('t2').textContent=C>0?`${{sea:'Море',rail:'ЖД',air:'Авіа'}[picked]} · ${f(cu,2)} $ · ${f(C)} грн`:'';
+  const shipName={sea:'Море',rail:'ЖД',air:'Авіа'}[picked];
+  $('dens').innerHTML=(dmode==='direct'
+    ?`Ціна товару <b>${f(s.usd,2)} $</b>${s.unitKg>0?` · вага 1 шт <b>${f(s.unitKg,2)} кг</b>`:''} · курс <b>${f(n('FX'),2)}</b> грн/$.`
+    :s.vol>0
+    ?`Об'єм коробки <b>${f(s.vol,4)} м³</b> · щільність <b>${f(s.dens)} кг/м³</b> · ціна товару <b>${f(s.usd,2)} $</b> · вага 1 шт <b>${f(s.unitKg,2)} кг</b>.`
+    :'')
+    +` Клікніть рядок таблиці, щоб зробити спосіб базовим.`
+    +(C>0?`<br><span class="fld">${shipName} → ⚙️ Тип Доставки</span> <span class="fld">${f(C)} грн → ⚙️ Собівартість, грн</span>${dmode==='tariff'&&s.vol>0?` <span class="fld">${(s.M.find(x=>x.key===picked)||s.M[0]).heavy?'Ваговий':"Об'ємний"} → ⚙️ Тип вантажу</span>`:''}`:'');
+
+  /* 3 · сезон */
+  const days={sea:100,rail:70,air:30}[picked];
+  let deadline=null, seasonTxt='';
+  if($('seaStart').value==='all'){
+    const total=days+n('prod');
+    $('t3').textContent=`всесезон · ${total} дн до складу`;
+    $('o3').innerHTML=`<div class="out o-good"><div class="t">Всесезон</div>
+      Жорсткого дедлайну немає. Від оплати до складу <b>${f(total)} дн</b> — ${f(n('prod'))} дн виробництва + ${days} дн доставки (${{sea:'Море',rail:'ЖД',air:'Авіа'}[picked]}).
+      Плануйте замовлення так, щоб залишок не впав до нуля за цей строк.</div>`;
+  } else if($('seaStart').value!==''){
+    const mi=+$('seaStart').value, today=new Date(); today.setHours(0,0,0,0);
+    let y=today.getFullYear(); const start=new Date(y,mi,1);
+    if(start<today){start.setFullYear(y+1)}
+    deadline=new Date(start); deadline.setDate(deadline.getDate()-days-n('prod'));
+    const left=Math.round((deadline-today)/864e5);
+    const dstr=d=>d.toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',yyyy:'numeric',year:'numeric'});
+    seasonTxt=`Старт сезону <b>${MON[mi]} ${start.getFullYear()}</b>. Щоб встигнути, замовлення треба розмістити до <b>${dstr(deadline)}</b> — це ${f(n('prod'))} дн виробництва + ${days} дн доставки (${{sea:'Море',rail:'ЖД',air:'Авіа'}[picked]}).`;
+    $('t3').textContent=`до ${deadline.toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit'})} · ${left} дн`;
+    $('o3').innerHTML=`<div class="out ${left<0?'o-crit':left<21?'o-warn':'o-good'}"><div class="t">Дедлайн замовлення</div>${seasonTxt}<br>
+      ${left<0?`<b>Дедлайн уже минув на ${Math.abs(left)} дн.</b> Цим способом у сезон не встигаємо — або беремо швидший, або цілимось у наступний сезон.`
+        :left<21?`Залишилось <b>${left} дн</b> — тісно, рішення треба ухвалювати зараз.`
+        :`Запас <b>${left} дн</b> до дедлайну.`}</div>`;
+  } else {$('t3').textContent='';$('o3').innerHTML=''}
+
+  /* блокери скаута — рахуємо до блоку 4, бо вердикт не залежить від бюджету */
+  const nicheFail=Et>0&&isFinite(f15)&&Et<f15;
+  const trig=[G>=100,s.unitKg>0&&s.unitKg<=1&&P>=1000,P>=2000];
+  const trigOk=trig.some(Boolean);
+  const bl=[];
+  if(nicheFail)bl.push('еталон нижче нашої підлоги');
+  if(isFinite(pos)&&pos>120)bl.push(`РРЦ ${f(pos)}% від еталона`);
+  if(G>0&&G<50)bl.push(`ціль ${f(G)} шт/міс`);
+  if(deadline&&deadline<new Date())bl.push('дедлайн сезону минув');
+  if(r>=15&&r<20&&!trigOk)bl.push('немає жодного тригера для 15–20%');
+
+  const mp=prof(P,C), c15=mp-0.15*P;
+
+  /* перевірки скаута */
+  $('checks').innerHTML=
+    chk(Et>0&&isFinite(f15)?!nicheFail:null,
+      Et>0&&isFinite(f15)
+        ?`<b>Гейт цінової ніші:</b> еталон ${f(Et)} грн ${nicheFail?'<b>нижчий</b>':'вищий'} за нашу підлогу 15% (${f(f15)} грн)${nicheFail?` на <b>${f(f15-Et)} грн</b> — у ціновій війні ми не виживемо. <b>Ми не в цій ніші.</b> Так згоріли рюкзаки, трусики і сушка — усі з Go 21–27%.`:` — запас <b>${f(Et-f15)} грн</b>.`}`
+        :'<b>Гейт цінової ніші:</b> потрібні ціна еталона й собівартість')+
+    chk(G>0?G>=50:null, G>0?`<b>Калібр ніші:</b> еталон продає <b>${f(G)} шт/міс</b>${G>=50?' — достатньо':' — менше 50, запуск не окупиться'}`:'<b>Калібр ніші:</b> потрібні продажі еталона')+
+    chk(isFinite(pos)?pos<=120:null, isFinite(pos)?`<b>Цінова позиція:</b> <b>${f(pos)}%</b> від еталона${pos>120?' — понад 120%':''}`:'<b>Цінова позиція:</b> потрібна ціна еталона')+
+    (r>=15&&r<20?chk(trigOk,`<b>Тригер для 15–20%:</b> ${trigOk?'є — ':''}${[trig[0]?`еталон ${f(G)} шт/міс ≥100`:'',trig[1]?`авіа-товар ${f(s.unitKg,2)} кг з РРЦ ${f(P)}`:'',trig[2]?`РРЦ ${f(P)} ≥2000`:''].filter(Boolean).join(' · ')||'жодного з трьох немає — картка не проходить'}`):'')+
+    (deadline?chk(deadline>new Date(),`<b>Сезон:</b> дедлайн замовлення ${deadline.toLocaleDateString('uk-UA')}`):'');
+  $('tc').textContent=bl.length?`${bl.length} ${plural(bl.length)}`:ready?'усе чисто':'';
+
+  $('floors').innerHTML=kpi('Ціна при 20%',isFinite(f20)?f(f20)+' грн':'—','ціль')+
+    kpi('Ціна при 15%',isFinite(f15)?f(f15)+' грн':'—','ПІДЛОГА','hl')+
+    kpi('Беззбитковість',isFinite(f0)?f(f0)+' грн':'—','нижче — збиток')+
+    kpi('Простір на рекламу',c15>0?f(c15)+' грн':'—','з одного замовлення при 15%');
+
+  /* вердикт */
+  const v=$('verdict');
+  v.className='verdict v-'+(ready?(nicheFail?'crit':st.c):'none');
+  $('vT').textContent=ready?(nicheFail?'🔴 No-Go':st.ic+' '+st.t):'—';
+  $('vP').textContent=ready&&isFinite(r)?f(r,1)+'%':'';
+  const w=[];
+  if(!ready)w.push('Заповніть РРЦ і собівартість.');
+  else{
+    w.push(`РРЦ ${f(P)} грн · собівартість ${f(C)} грн · маржинальний прибуток <b>${f(mp)} грн/шт</b>.`);
+    if(nicheFail)w.push('<b>Гейт цінової ніші не пройдено — це важливіше за рентабельність.</b>');
+    else if(r>=20)w.push('За рентабельністю проходить без умов.');
+    else if(r>=15)w.push(trigOk?'Тригер для 15–20% є.':'<b>Потрібен тригер для 15–20% — жодного з трьох немає.</b>');
+    else w.push(`Нижче 15% — No-Go без винятків. Для 15% ціна має бути від <b>${f(f15)} грн</b>.`);
+    if(bl.length)w.push(`<br><b>⛔ ${bl.length} ${plural(bl.length)}: ${bl.join(' · ')}.</b>`);
+  }
+  $('vW').innerHTML=w.join(' ');
+}
+
+/* ¥ ⇄ $ синхронізація: джерело істини — те поле, в яке вводили */
+$('cny').addEventListener('input',()=>{ $('usd').value = n('CNY')>0 && $('cny').value!=='' ? (n('cny')/n('CNY')).toFixed(2) : ''; });
+$('usd').addEventListener('input',()=>{ $('cny').value = $('usd').value!=='' ? (n('usd')*n('CNY')).toFixed(2) : ''; });
+$('CNY').addEventListener('input',()=>{ rateManual=true; if($('cny').value!=='') $('usd').value=(n('cny')/Math.max(0.01,n('CNY'))).toFixed(2); });
+$('sumUsd').addEventListener('input',()=>{ rateManual=false; if($('cny').value!=='') $('usd').value=(n('cny')/Math.max(0.01,rateFor(n('sumUsd')).r)).toFixed(2); });
+
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  dmode=b.dataset.dm;
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.dm===dmode));
+  $('pane-tariff').hidden=dmode!=='tariff'; $('pane-direct').hidden=dmode!=='direct';
+  render();
+});
+
+document.querySelectorAll('input,select').forEach(i=>i.addEventListener('input',render));
+/* Друк / PDF: даємо браузеру осмислену назву файлу через document.title */
+const BASE_TITLE=document.title;
+function pdfName(){
+  const nm=($('NAME').value||'SKU').trim().replace(/[\\/:*?"<>|]/g,'-');
+  const d=new Date(), p=x=>String(x).padStart(2,'0');
+  const v=$('vT').textContent.replace(/[^A-Za-zА-Яа-яЇїІіЄєҐґ\- ]/g,'').trim();
+  return `Скаут — ${nm}${v?' — '+v:''} — ${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()}`;
+}
+function toast(html,ms=5200){
+  const t=$('tip'); t.innerHTML=html; t.classList.add('on');
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('on'),ms);
+}
+const IN_FRAME = (()=>{ try{ return window.self !== window.top }catch(e){ return true } })();
+
+/* Статична копія сторінки з поточними значеннями — для друку в окремому вікні */
+function printableHTML(name){
+  document.querySelectorAll('input').forEach(i=>i.setAttribute('value', i.value));
+  document.querySelectorAll('select').forEach(s=>[...s.options].forEach(o=>
+    o.selected ? o.setAttribute('selected','') : o.removeAttribute('selected')));
+  document.querySelectorAll('.step').forEach(d=>d.setAttribute('open',''));
+  const c = document.documentElement.cloneNode(true);
+  c.querySelectorAll('script').forEach(s=>s.remove());
+  const t = c.querySelector('title'); if(t) t.textContent = name;
+  return '<!DOCTYPE html><html lang="uk">' + c.innerHTML
+    .replace('</body>', '<scr'+'ipt>onload=()=>setTimeout(()=>print(),350)</scr'+'ipt></body>') + '</html>';
+}
+
+$('print').onclick=()=>{
+  document.querySelectorAll('.step').forEach(d=>d.open=true);
+  const name = pdfName();
+
+  /* Файл відкрито напряму — звичайний друк */
+  if(!IN_FRAME){
+    document.title = name;
+    toast('У вікні друку оберіть <b>«Зберегти як PDF»</b> у полі «Принтер». Назва файлу вже підставлена.');
+    setTimeout(()=>{ print(); document.title = BASE_TITLE; }, 700);
+    return;
+  }
+
+  /* Усередині панелі перегляду друк заблоковано — пробуємо окреме вікно */
+  let w = null;
+  try{ w = window.open('', '_blank'); }catch(e){}
+  if(w && w.document){
+    w.document.open();
+    w.document.write(printableHTML(name));
+    w.document.close();
+    toast('Відкрилось окреме вікно — у ньому оберіть <b>«Зберегти як PDF»</b>.');
+    return;
+  }
+
+  /* Спливні вікна теж заблоковано — єдиний надійний шлях */
+  toast('Панель перегляду не дає відкрити друк. Натисніть <b>Download</b> угорі цієї панелі, '
+      + 'відкрийте завантажений файл подвійним кліком — і кнопка «Зберегти PDF» спрацює.', 14000);
+};
+addEventListener('beforeprint',()=>{document.querySelectorAll('.step').forEach(d=>d.open=true)});
+
+if(IN_FRAME) $('frameNote').innerHTML=
+  `<div class="out" style="margin:0 0 12px;border-style:dashed">
+   <div class="t">Щоб зберігати в PDF</div>
+   Зараз файл відкрито в панелі перегляду — браузер не дає їй викликати діалог друку.
+   Натисніть <b>Download</b> угорі панелі й відкрийте завантажений файл подвійним кліком.
+   Тоді «⬇ Зберегти PDF» працюватиме, а сам калькулятор стане доступним офлайн — можна покласти в закладки.</div>`;
+$('theme').onclick=()=>{const c=document.documentElement.getAttribute('data-theme');
+  const dark=c==='dark'||(!c&&matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.setAttribute('data-theme',dark?'light':'dark')};
+
+/* Пемза 74046 — коробка звірена з розрахунком Марії */
+const A={K:18,NAME:'Пемза електрична роликова',CAT:'Ролікові пилки · 28.07',pRRC:999,pEt:899,goal:60,cny:46,boxQty:40,bL:39,bW:38.5,bH:23.5,bKg:14.1,prod:15,sumUsd:1400,CNYdate:'21.07.2026'};
+/* Рюкзак 74078 — реальні числа: Go при 27%, факт −0,5% */
+const B={K:22,NAME:'Рюкзак міський 74078',CAT:'Рюкзаки · 28.07',pRRC:1169,pEt:619,goal:61,cny:55,boxQty:30,bL:60,bW:40,bH:40,bKg:12,prod:20,sumUsd:1700,CNYdate:'21.07.2026'};
+function load(o,m){document.querySelectorAll('input[type=number],input[type=text]').forEach(i=>{if(o[i.id]!==undefined)i.value=o[i.id]});
+  rateManual=false;
+  $('CNY').value=rateFor(n('sumUsd')).r;
+  $('usd').value=(n('cny')/Math.max(0.01,n('CNY'))).toFixed(2);
+  $('seaStart').value=m; picked='sea';
+  dmode='tariff';
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.dm==='tariff'));
+  $('pane-tariff').hidden=false; $('pane-direct').hidden=true;
+  render()}
+$('demoA').onclick=()=>load(A,'2');
+$('demoB').onclick=()=>load(B,'8');
+$('reset').onclick=()=>{document.querySelectorAll('input[type=number]').forEach(i=>{
+  if(['E','OH','B','D','FX','CNY','sumUsd','seaKg','seaM3','rlKg','rlM3','airKg','airM3','prod','boxQty'].includes(i.id))return;i.value=''});
+  $('CAT').value='';$('NAME').value='';$('CNYdate').value='';$('seaStart').value='';picked='sea';rateManual=false;render()};
+render();
+</script>
+</body>
+</html>
