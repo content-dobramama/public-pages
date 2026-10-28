@@ -141,6 +141,24 @@
   @keyframes rise{to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){.anim{animation:none;opacity:1;transform:none}}
   .foot{color:var(--faint);font-size:11px;line-height:1.6;margin-top:22px;border-top:1px solid var(--line);padding-top:16px}
+
+  /* опт і 3 магазини */
+  .optset{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+  @media(max-width:620px){.optset{grid-template-columns:1fr 1fr}}
+  .optset .field{margin-bottom:0}
+  .optset .inp input{font-size:14px;padding:8px 10px}
+  .shopset{width:100%;margin-bottom:14px}
+  .shopset td{padding:7px 6px;text-align:left;font-family:'IBM Plex Sans'}
+  .shopset select,.shopset input[type=number]{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13px;padding:7px 8px;width:100%}
+  .shopset input[type=number]{max-width:110px}
+  .shopset select:focus,.shopset input:focus{outline:0;border-color:var(--amber)}
+  .shopset label{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap}
+  .shopset input[type=checkbox]{accent-color:var(--amber);width:16px;height:16px}
+  .optres td{vertical-align:top}
+  .optres .pp{font-size:16px;font-weight:700;color:var(--ink)}
+  .optres .mm{display:block;font-size:11px;margin-top:3px}
+  .optres .pf{display:block;font-size:10.5px;color:var(--faint);margin-top:2px}
+  .optres td.off{color:var(--faint)}
 </style>
 </head>
 <body>
@@ -178,6 +196,7 @@
         <li>У полі категорії вводиш назву або ID — комісія підставиться автоматично під обраний режим. Можна перебити вручну.</li>
         <li>Обираєш штучну знижку — отримуєш дві ціни.</li>
         <li><b>Своя ціна</b> — зворотна перевірка ціни, яка вже стоїть на Прому.</li>
+        <li><b>Опт і 3 магазини</b> — від роздрібної ціни (своя або під ціль) рахує ціни «від 2 шт» і «від 10 шт» для DobraMAMA, OnePro та EvPower. Опт = роздріб − знижка порогу, округлена до 10 грн, але не нижче дна: <code>Ц = (Собівартість + (Фікс + Плата Прому) ÷ К-сть) ÷ (1 − r − m)</code>. Дно першого порогу — цільова рентабельність, другого — мінімальна. Рентабельність перевіряється для найгіршої кількості в порогу (коли сума замовлення перескакує 700 грн).</li>
         <li>Пороги рентабельності й тарифи — у «Налаштуваннях».</li>
       </ul>
       <div class="rule">⚠️ Закреслена ціна, за якою товар реально ніколи не продавався, формально підпадає під введення споживача в оману (закон про захист прав споживачів). Тримай знижку правдоподібною — калькулятор підсвітить, якщо вона вища за 50%.</div>
@@ -300,6 +319,23 @@
         </div>
 
         <div class="bd" id="bd"></div>
+      </div>
+
+      <div class="card anim" style="animation-delay:.12s">
+        <h2>Опт і 3 магазини</h2>
+        <div class="optset">
+          <div class="field"><label for="q1">Поріг 1, від</label><div class="inp"><input id="q1" type="number" value="2" min="2" step="1"><span class="unit">шт</span></div></div>
+          <div class="field"><label for="d1">Знижка порогу 1</label><div class="inp"><input id="d1" type="number" value="9" min="0" max="60" step="1"><span class="unit">%</span></div></div>
+          <div class="field"><label for="q2">Поріг 2, від</label><div class="inp"><input id="q2" type="number" value="10" min="3" step="1"><span class="unit">шт</span></div></div>
+          <div class="field"><label for="d2">Знижка порогу 2</label><div class="inp"><input id="d2" type="number" value="20" min="0" max="60" step="1"><span class="unit">%</span></div></div>
+        </div>
+        <div class="tw"><table class="shopset"><tbody id="shopset"></tbody></table></div>
+        <div id="optAlerts"></div>
+        <div class="tw"><table class="optres">
+          <thead><tr><th>Магазин</th><th>Роздріб</th><th>Стара</th><th id="q1h">Від 2 шт</th><th id="q2h">Від 10 шт</th></tr></thead>
+          <tbody id="optres"></tbody>
+        </table></div>
+        <div class="small" style="margin-top:10px">База роздробу — «Своя ціна», а якщо її немає — ціна під ціль. Зсув магазину додається до бази (у гривнях), щоб ціни в наших магазинах не були однакові й не підрізали один одного. Під ціною — рентабельність і прибуток з одного замовлення на мінімальну кількість порогу. Поріг 2 став, лише якщо залишку вистачає (≥ 3× поріг) або сезон закінчується.</div>
       </div>
 
       <div class="card anim" style="animation-delay:.13s">
@@ -433,13 +469,13 @@ function compute(){
     $('cpcTxt').innerHTML='Ця категорія платить за <b>переходи</b>, а не % від замовлення. При конверсії '+fmtP(num('cr'))+'% реклама коштує <b>'+fmt(c.adPO)+' грн</b> на одне замовлення — додано у фікс.';
   }
   const blank=()=>{['priceV','oldV','discV','mgV','minV'].forEach(id=>$(id).textContent='—');['bd','ladder','modes'].forEach(id=>$(id).innerHTML='');$('modeNote').textContent='';};
-  if(c.cost<=0){ blank(); $('priceS').textContent='Введи собівартість.'; return; }
+  if(c.cost<=0){ blank(); $('optres').innerHTML=''; $('priceS').textContent='Введи собівартість.'; return; }
   if(rOf(com,c)>=1){ A.innerHTML='<div class="warn">Комісія + еквайринг + overhead ≥ 100% ціни — перевір ставки.</div>'; blank(); return; }
 
   const pTgt=priceFor(tgtm,com,c,true), pMin=priceFor(minm,com,c,true), floor=priceFor(0,com,c,false);
   const P=hasOwn?own:pTgt;
   if(!isFinite(pTgt)) A.innerHTML+='<div class="warn">Ціль '+fmtP(tgtm)+'% недосяжна за цих витрат (стеля ≈'+fmtP((1-rOf(com,c))*100)+'%). Знизь ціль або собівартість.</div>';
-  if(!isFinite(P)){ blank(); return; }
+  if(!isFinite(P)){ blank(); $('optres').innerHTML=''; return; }
 
   const O=oldOf(P), dG=O-P, dP=O>0?dG/O*100:0;
   const mg=marginAt(P,com,c), profit=profitAt(P,com,c);
@@ -511,6 +547,91 @@ function compute(){
     rows+='<tr'+(i===best?' class="active"':'')+'><td>'+fmt(row.p)+'</td><td>'+fmt(o)+'</td><td>'+(fr?fr+' грн':'—')+'</td><td style="color:'+col(row.m,minm,tgtm)+'">'+fmtP(row.m)+'%</td></tr>';
   });
   $('ladder').innerHTML=rows;
+  computeOpt(P);
+}
+
+// ---------- опт і 3 магазини ----------
+const SHOPS=[{id:'dm',n:'DobraMAMA',mode:4,off:0,on:true},{id:'op',n:'OnePro',mode:4,off:-20,on:true},{id:'ev',n:'EvPower',mode:4,off:-10,on:false}];
+function renderShopSet(){
+  $('shopset').innerHTML=SHOPS.map(s=>'<tr><td><label><input type="checkbox" id="on_'+s.id+'"'+(s.on?' checked':'')+'>'+s.n+'</label></td>'+
+    '<td><select id="md_'+s.id+'" aria-label="Режим '+s.n+'">'+MODES.map(m=>'<option value="'+m.i+'"'+(m.i===s.mode?' selected':'')+'>'+m.n+'</option>').join('')+'</select></td>'+
+    '<td><input id="of_'+s.id+'" type="number" step="10" value="'+s.off+'" aria-label="Зсув ціни '+s.n+', грн"></td><td class="small" style="margin:0">зсув, грн</td></tr>').join('');
+  SHOPS.forEach(s=>{
+    $('on_'+s.id).addEventListener('change',e=>{s.on=e.target.checked;compute();});
+    $('md_'+s.id).addEventListener('change',e=>{s.mode=parseInt(e.target.value);compute();});
+    $('of_'+s.id).addEventListener('input',e=>{s.off=parseFloat(e.target.value)||0;compute();});
+  });
+}
+function comFor(mi,c){
+  if(c.isCpc) return 0;
+  if(cat&&catType==='o') return cat[mi];
+  const curK=MODES.find(m=>m.i===mode).k, k=MODES.find(m=>m.i===mi).k;
+  return num('roy')/curK*k;
+}
+function ctxFor(mi,c){
+  if(!c.isCpc) return c;
+  const curK=MODES.find(m=>m.i===mode).k, k=MODES.find(m=>m.i===mi).k;
+  const cpcM=cat?cat[mi]:num('cpc')/curK*k;
+  const ad=num('cr')>0?cpcM/(num('cr')/100):0;
+  return Object.assign({},c,{fixed:num('bonus')+num('deliv')+ad,adPO:ad});
+}
+// одне замовлення на n штук за ціною P за штуку: фікс і плата Прому — один раз на замовлення
+function profitN(P,n,com,c){ const S=P*n; return S*(1-rOf(com,c))-c.cost*n-c.fixed-feeAt(S,c); }
+function marginN(P,n,com,c){ return P>0?profitN(P,n,com,c)/(P*n)*100:0; }
+// найгірша рентабельність для будь-якої кількості від N: перевіряємо N і момент, коли сума перескакує 200 / 700
+function worstN(P,N,com,c){
+  let w=marginN(P,N,com,c);
+  [200,700].forEach(t=>{ const k=Math.max(N,Math.ceil(t/P)); w=Math.min(w,marginN(P,k,com,c)); });
+  return w;
+}
+// дно: найменша округлена ціна, що тримає рентабельність m для будь-якої кількості від N
+function floorN(m,N,com,c){
+  const d=1-rOf(com,c)-m/100;
+  if(d<=0) return Infinity;
+  let P=Math.max(1,Math.floor((c.cost+c.fixed/N)/d));
+  const hi=(c.cost+(c.fixed+c.f2)/N)/d+2;
+  while(P<=hi){ const R=up(P,rmode); if(worstN(R,N,com,c)>=m-1e-9) return R; P++; }
+  return up(hi,rmode);
+}
+function cellP(P,N,com,c,minm,tgtm){
+  const mg=marginN(P,N,com,c), pr=profitN(P,N,com,c);
+  return '<span class="pp">'+fmt(P)+'</span><span class="mm" style="color:'+col(mg,minm,tgtm)+'">'+fmtP(mg)+'%</span><span class="pf">'+fmtS(pr)+' ₴ / '+N+' шт</span>';
+}
+function computeOpt(base){
+  const c0=ctx(), minm=num('minm'), tgtm=num('tgtm');
+  const q1=Math.max(2,Math.round(num('q1'))), q2=Math.max(q1+1,Math.round(num('q2')));
+  const d1=Math.max(0,num('d1')), d2=Math.max(0,num('d2'));
+  $('q1h').textContent='Від '+q1+' шт'; $('q2h').textContent='Від '+q2+' шт';
+  const W=$('optAlerts'); W.innerHTML='';
+  if(!(base>0)||c0.cost<=0){ $('optres').innerHTML=''; return; }
+  const notes=[]; let rows='';
+  const rnd10=x=>Math.round(x/10)*10;
+  SHOPS.forEach(s=>{
+    const mn=MODES.find(m=>m.i===s.mode).n;
+    if(!s.on){ rows+='<tr><td class="lbl off">'+s.n+'</td><td class="off" colspan="4">не продаємо</td></tr>'; return; }
+    const c=ctxFor(s.mode,c0), com=comFor(s.mode,c);
+    if(rOf(com,c)>=1){ rows+='<tr><td class="lbl">'+s.n+'</td><td colspan="4">ставки ≥ 100%</td></tr>'; return; }
+    const lbl='<td class="lbl">'+s.n+'<span class="pf">'+mn+(c.isCpc?'':' · '+fmtP(com)+'%')+'</span></td>';
+    // роздріб
+    let R=up(Math.max(1,base+s.off),rmode);
+    const rMin=priceFor(minm,com,c,true);
+    if(isFinite(rMin)&&R<rMin){ notes.push(s.n+': роздріб піднято до мінімуму '+fmtP(minm)+'% — <b>'+fmt(rMin)+' грн</b>'); R=rMin; }
+    const O=oldOf(R);
+    // поріг 1: дно = ціль
+    let p1=up(R-rnd10(R*d1/100),rmode), f1=floorN(tgtm,q1,com,c), c1;
+    if(p1<f1) p1=f1;
+    if(!isFinite(p1)||p1>=R){ c1='<span class="pf">немає місця для знижки: роздріб ≤ дна '+(isFinite(f1)?fmt(f1)+' грн':'')+'</span>'; p1=R; }
+    else if(p1===f1&&R-rnd10(R*d1/100)<f1) notes.push(s.n+', від '+q1+' шт: знижку обрізано до дна під ціль '+fmtP(tgtm)+'% — <b>'+fmt(f1)+' грн</b>');
+    else c1=cellP(p1,q1,com,c,minm,tgtm);
+    // поріг 2: дно = мінімум, і нижче за поріг 1
+    let p2=up(R-rnd10(R*d2/100),rmode), f2=floorN(minm,q2,com,c), c2;
+    const clamp2=p2<f2; if(clamp2) p2=f2;
+    if(!isFinite(p2)||p2>=p1) c2='<span class="pf">немає місця: дно '+(isFinite(f2)?fmt(f2)+' грн':'—')+' ≥ попередньої ціни</span>';
+    else { c2=cellP(p2,q2,com,c,minm,tgtm); if(clamp2) notes.push(s.n+', від '+q2+' шт: знижку обрізано до дна під мінімум '+fmtP(minm)+'% — <b>'+fmt(f2)+' грн</b>'); }
+    rows+='<tr>'+lbl+'<td>'+cellP(R,1,com,c,minm,tgtm)+'</td><td><span class="pp">'+fmt(O)+'</span><span class="pf">знижка '+fmt(O-R)+' грн</span></td><td>'+c1+'</td><td>'+c2+'</td></tr>';
+  });
+  $('optres').innerHTML=rows;
+  if(notes.length) W.innerHTML='<div class="warn">'+notes.join('<br>')+'</div>';
 }
 
 function segs(id,cb){
@@ -526,7 +647,8 @@ segs('modeSel',v=>{
   else { const k=MODES.find(m=>m.i===mode).k; $('roy').value=Math.round(num('roy')/prev*k*100)/100; }
 });
 $('roy').addEventListener('input',()=>{ if(cat&&catType==='o'){ $('catpick').innerHTML+=' · <span style="color:var(--amber)">змінено вручну</span>'; cat=null; catType=null; } });
-['cost','roy','disc','minm','tgtm','acq','fee1','fee2','oh','bonus','deliv','own','cpc','cr'].forEach(id=>$(id).addEventListener('input',compute));
+['cost','roy','disc','minm','tgtm','acq','fee1','fee2','oh','bonus','deliv','own','cpc','cr','q1','d1','q2','d2'].forEach(id=>$(id).addEventListener('input',compute));
+renderShopSet();
 compute();
 </script>
 </body>
